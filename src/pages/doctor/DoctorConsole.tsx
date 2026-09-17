@@ -11,13 +11,14 @@ import { useActiveUser } from '../../lib/activeUser'
 import type { PrescriptionItem } from '../../lib/types'
 
 export function DoctorConsole() {
-  const { state, getPatient, getStaffName, getRoomQueue, loginDoctor, logoutDoctor, startConsultation, saveConsultation } =
+  const { getPatient, getStaffName, getRoomQueue, roomsForSite, loginDoctor, logoutDoctor, startConsultation, saveConsultation } =
     useClinic()
-  const { active } = useActiveUser()
+  const { active, site } = useActiveUser()
   const navigate = useNavigate()
 
-  const myRoom = state.rooms.find((r) => r.currentDoctorId === active.staffId)
-  const freeRooms = state.rooms.filter((r) => !r.currentDoctorId)
+  const mySiteRooms = site ? roomsForSite(site.id) : []
+  const myRoom = mySiteRooms.find((r) => r.currentDoctorId === active.staffId)
+  const freeRooms = mySiteRooms.filter((r) => !r.currentDoctorId)
   const [pickedRoom, setPickedRoom] = useState('')
 
   const queue = myRoom ? getRoomQueue(myRoom.id).filter((v) => v.status !== 'completed') : []
@@ -30,11 +31,12 @@ export function DoctorConsole() {
   if (!myRoom) {
     return (
       <div>
-        <Topbar title="My Room" subtitle={state.siteName} />
+        <Topbar title="My Room" />
         <GlassCard className="max-w-md p-6">
           <h2 className="mb-1 font-semibold text-[#211c37]">Login to an OPD room</h2>
           <p className="mb-4 text-sm text-[#7a7396]">
-            Pick a free room. Its existing queue (if any) will transfer to you automatically.
+            You're signed in to Daiko as <span className="font-medium text-brand-700">{getStaffName(active.staffId)}</span>.
+            Pick a free room at {site?.name} to start seeing patients — its existing queue (if any) transfers to you automatically.
           </p>
           <Select value={pickedRoom} onChange={(e) => setPickedRoom(e.target.value)} className="mb-4">
             <option value="">Select a room</option>
@@ -77,7 +79,7 @@ export function DoctorConsole() {
 
   return (
     <div>
-      <Topbar title={myRoom.name} subtitle={state.siteName} />
+      <Topbar title={myRoom.name} />
 
       <div className="mb-6 flex items-center justify-between">
         <p className="text-sm text-[#7a7396]">

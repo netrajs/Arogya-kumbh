@@ -1,13 +1,20 @@
 export type StaffRole = 'receptionist' | 'nurse' | 'doctor'
 
+export interface Site {
+  id: string
+  name: string
+}
+
 export interface StaffMember {
   id: string
   name: string
   role: StaffRole
+  siteId: string
 }
 
 export interface Room {
   id: string
+  siteId: string
   name: string
   currentDoctorId: string | null
 }
@@ -16,6 +23,7 @@ export type Gender = 'Male' | 'Female' | 'Other'
 
 export interface Patient {
   id: string
+  siteId: string
   name: string
   gender: Gender
   age: number
@@ -51,6 +59,7 @@ export interface Consultation {
 
 export interface Visit {
   id: string
+  siteId: string
   tokenNumber: number
   patientId: string
   roomId: string

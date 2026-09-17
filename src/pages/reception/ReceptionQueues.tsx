@@ -3,6 +3,7 @@ import { GlassCard } from '../../components/ui/GlassCard'
 import { Badge } from '../../components/ui/Badge'
 import { Select } from '../../components/ui/Field'
 import { useClinic } from '../../lib/store'
+import { useActiveUser } from '../../lib/activeUser'
 import type { Visit, VisitStatus } from '../../lib/types'
 
 const statusBadge: Record<VisitStatus, { tone: 'ok' | 'warn' | 'idle' | 'info' | 'amber'; label: string }> = {
@@ -13,14 +14,17 @@ const statusBadge: Record<VisitStatus, { tone: 'ok' | 'warn' | 'idle' | 'info' |
 }
 
 export function ReceptionQueues() {
-  const { state, getPatient, getStaffName, getRoomQueue, reassignVisit } = useClinic()
+  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit } = useClinic()
+  const { site } = useActiveUser()
+
+  const myRooms = site ? roomsForSite(site.id) : []
 
   return (
     <div>
-      <Topbar title="OPD Queues" subtitle={state.siteName} />
+      <Topbar title="OPD Queues" />
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {state.rooms.map((room) => {
+        {myRooms.map((room) => {
           const queue = getRoomQueue(room.id)
           return (
             <GlassCard key={room.id} className="p-5">
@@ -36,7 +40,7 @@ export function ReceptionQueues() {
               <ul className="space-y-2">
                 {queue.map((visit: Visit) => {
                   const patient = getPatient(visit.patientId)
-                  const otherRooms = state.rooms.filter((r) => r.id !== room.id && r.currentDoctorId)
+                  const otherRooms = myRooms.filter((r) => r.id !== room.id && r.currentDoctorId)
                   return (
                     <li key={visit.id} className="rounded-2xl bg-white/55 p-3">
                       <div className="flex items-center justify-between">

@@ -20,14 +20,28 @@ const navByRole: Record<StaffRole, NavItem[]> = {
   ],
 }
 
+function BackgroundBlobs() {
+  return (
+    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <div className="absolute -left-16 -top-24 h-[26rem] w-[26rem] rounded-full bg-brand-300/45 blur-[100px]" />
+      <div className="absolute right-[-6rem] top-1/4 h-[24rem] w-[24rem] rounded-full bg-fuchsia-300/35 blur-[100px]" />
+      <div className="absolute bottom-[-8rem] left-1/3 h-[28rem] w-[28rem] rounded-full bg-amber-200/40 blur-[110px]" />
+      <div className="absolute bottom-1/4 right-1/4 h-72 w-72 rounded-full bg-sky-200/35 blur-[90px]" />
+    </div>
+  )
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { active } = useActiveUser()
   const items = navByRole[active.role]
 
   return (
-    <div className="mx-auto flex max-w-7xl gap-4 p-4">
+    <div className="min-h-screen">
+      <BackgroundBlobs />
       <Sidebar items={items} />
-      <main className="min-w-0 flex-1 py-2">{children}</main>
+      <main className="ml-28 min-w-0 px-6 py-6 sm:px-10 sm:py-8">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   )
 }

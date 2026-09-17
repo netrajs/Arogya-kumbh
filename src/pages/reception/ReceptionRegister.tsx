@@ -8,8 +8,8 @@ import { useActiveUser } from '../../lib/activeUser'
 import type { Gender } from '../../lib/types'
 
 export function ReceptionRegister() {
-  const { state, getStaffName, registerPatient } = useClinic()
-  const { active } = useActiveUser()
+  const { getStaffName, roomsForSite, registerPatient } = useClinic()
+  const { active, site } = useActiveUser()
 
   const [name, setName] = useState('')
   const [gender, setGender] = useState<Gender>('Male')
@@ -18,14 +18,15 @@ export function ReceptionRegister() {
   const [roomId, setRoomId] = useState('')
   const [confirmation, setConfirmation] = useState<{ token: number; doctor: string } | null>(null)
 
-  const availableRooms = state.rooms.filter((r) => r.currentDoctorId)
+  const myRooms = site ? roomsForSite(site.id) : []
+  const availableRooms = myRooms.filter((r) => r.currentDoctorId)
 
   const canSubmit = name.trim() && age && ailment.trim() && roomId
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!canSubmit) return
-    const room = state.rooms.find((r) => r.id === roomId)
+    const room = myRooms.find((r) => r.id === roomId)
     const visit = registerPatient({
       name: name.trim(),
       gender,
@@ -46,7 +47,7 @@ export function ReceptionRegister() {
 
   return (
     <div>
-      <Topbar title="Register Patient" subtitle={state.siteName} />
+      <Topbar title="Register Patient" />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <GlassCard className="p-6 lg:col-span-2">
@@ -100,7 +101,7 @@ export function ReceptionRegister() {
         <GlassCard className="p-6">
           <h2 className="mb-3 text-sm font-semibold text-[#3a3454]">Available OPD</h2>
           <ul className="space-y-2">
-            {state.rooms.map((r) => (
+            {myRooms.map((r) => (
               <li key={r.id} className="flex items-center justify-between rounded-2xl bg-white/50 px-4 py-2.5 text-sm">
                 <span className="font-medium text-[#241f3a]">{r.name}</span>
                 <span className={r.currentDoctorId ? 'text-ok-text' : 'text-idle-text'}>

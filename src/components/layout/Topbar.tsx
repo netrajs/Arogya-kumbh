@@ -11,9 +11,9 @@ const roleLabels: Record<StaffRole, string> = {
   doctor: 'Doctor',
 }
 
-export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
+export function Topbar({ title }: { title: string }) {
   const { staff } = useClinic()
-  const { active, setActive, staffMember } = useActiveUser()
+  const { active, setActive, staffMember, site } = useActiveUser()
 
   const staffForRole = staff.filter((s) => s.role === active.role)
 
@@ -21,7 +21,9 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     <header className="no-print mb-6 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h1 className="text-2xl font-bold text-[#211c37]">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-[#7a7396]">{subtitle}</p>}
+        <p className="mt-1 text-sm text-[#7a7396]">
+          Daiko Clinic {site && <>· {site.name}</>}
+        </p>
       </div>
 
       <div className="flex items-center gap-3">

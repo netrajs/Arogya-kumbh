@@ -3,16 +3,20 @@ import { GlassCard } from '../components/ui/GlassCard'
 import { Badge } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { useClinic } from '../lib/store'
+import { useActiveUser } from '../lib/activeUser'
 
 export function Doctors() {
   const { state, doctors } = useClinic()
+  const { site } = useActiveUser()
+
+  const siteDoctors = site ? doctors.filter((d) => d.siteId === site.id) : doctors
 
   return (
     <div>
-      <Topbar title="Doctors" subtitle={state.siteName} />
+      <Topbar title="Doctors" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {doctors.map((doc) => {
+        {siteDoctors.map((doc) => {
           const room = state.rooms.find((r) => r.currentDoctorId === doc.id)
           return (
             <GlassCard key={doc.id} className="flex items-center gap-4 p-5">

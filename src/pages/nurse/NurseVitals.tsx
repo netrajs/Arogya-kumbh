@@ -7,10 +7,10 @@ import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
 
 export function NurseVitals() {
-  const { state, getPatient, getStaffName, getNurseQueue, recordVitals } = useClinic()
-  const { active } = useActiveUser()
+  const { getPatient, getNurseQueue, recordVitals } = useClinic()
+  const { active, site } = useActiveUser()
 
-  const queue = getNurseQueue()
+  const queue = site ? getNurseQueue(site.id) : []
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = queue.find((v) => v.id === selectedId) ?? queue[0] ?? null
 
@@ -39,7 +39,7 @@ export function NurseVitals() {
 
   return (
     <div>
-      <Topbar title="Initial Assessment" subtitle={state.siteName} />
+      <Topbar title="Initial Assessment" />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <GlassCard className="p-5 lg:col-span-1">

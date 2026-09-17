@@ -41,7 +41,8 @@ export function ActiveUserProvider({ children }: { children: ReactNode }) {
 export function useActiveUser() {
   const ctx = useContext(Ctx)
   if (!ctx) throw new Error('useActiveUser must be used within ActiveUserProvider')
-  const { staff } = useClinic()
+  const { staff, getStaffSite } = useClinic()
   const staffMember = staff.find((s) => s.id === ctx.active.staffId)
-  return { ...ctx, staffMember }
+  const site = getStaffSite(ctx.active.staffId)
+  return { ...ctx, staffMember, site }
 }
