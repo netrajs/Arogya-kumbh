@@ -1,13 +1,13 @@
-import { Topbar } from '../../components/layout/Topbar'
-import { GlassCard } from '../../components/ui/GlassCard'
+import { PageHeader } from '../../components/ui/PageHeader'
+import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Select } from '../../components/ui/Field'
 import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
 import type { Visit, VisitStatus } from '../../lib/types'
 
-const statusBadge: Record<VisitStatus, { tone: 'ok' | 'warn' | 'idle' | 'info' | 'amber'; label: string }> = {
-  waiting_nurse: { tone: 'amber', label: 'With Nurse' },
+const statusBadge: Record<VisitStatus, { tone: 'pending' | 'info' | 'ok' | 'idle'; label: string }> = {
+  waiting_nurse: { tone: 'pending', label: 'With Nurse' },
   waiting_doctor: { tone: 'info', label: 'Waiting for Doctor' },
   in_consultation: { tone: 'ok', label: 'In Consultation' },
   completed: { tone: 'idle', label: 'Completed' },
@@ -21,30 +21,30 @@ export function ReceptionQueues() {
 
   return (
     <div>
-      <Topbar title="OPD Queues" />
+      <PageHeader title="OPD Queues" description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-gutter md:grid-cols-2 xl:grid-cols-3">
         {myRooms.map((room) => {
           const queue = getRoomQueue(room.id)
           return (
-            <GlassCard key={room.id} className="p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-semibold text-[#211c37]">{room.name}</h2>
-                <span className={room.currentDoctorId ? 'text-sm text-ok-text' : 'text-sm text-idle-text'}>
+            <Card key={room.id}>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-headline-md text-headline-md text-on-surface">{room.name}</h2>
+                <span className={'text-meta font-meta ' + (room.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
                   {room.currentDoctorId ? getStaffName(room.currentDoctorId) : 'No doctor'}
                 </span>
               </div>
 
-              {queue.length === 0 && <p className="text-sm text-[#9a93b3]">Queue is empty.</p>}
+              {queue.length === 0 && <p className="text-body-md text-on-surface-variant">Queue is empty.</p>}
 
               <ul className="space-y-2">
                 {queue.map((visit: Visit) => {
                   const patient = getPatient(visit.patientId)
                   const otherRooms = myRooms.filter((r) => r.id !== room.id && r.currentDoctorId)
                   return (
-                    <li key={visit.id} className="rounded-2xl bg-white/55 p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-[#241f3a]">
+                    <li key={visit.id} className="rounded-xl bg-surface-container-low p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-body-md text-body-md font-medium text-on-surface">
                           #{visit.tokenNumber} · {patient?.name}
                         </span>
                         <Badge tone={statusBadge[visit.status].tone}>{statusBadge[visit.status].label}</Badge>
@@ -71,7 +71,7 @@ export function ReceptionQueues() {
                   )
                 })}
               </ul>
-            </GlassCard>
+            </Card>
           )
         })}
       </div>

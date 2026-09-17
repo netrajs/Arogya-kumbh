@@ -1,27 +1,37 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost'
+type Size = 'sm' | 'md' | 'lg'
 
 const variants: Record<Variant, string> = {
-  primary:
-    'bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-[0_6px_20px_rgba(93,79,207,0.35)] hover:brightness-105',
+  primary: 'bg-primary text-on-primary border border-primary hover:brightness-105',
   secondary:
-    'bg-white/70 text-[#3a3454] border border-white/80 shadow-sm hover:bg-white/90',
-  danger: 'bg-white/70 text-rose-600 border border-rose-200 hover:bg-rose-50',
-  ghost: 'bg-transparent text-[#5b5478] hover:bg-white/50',
+    'bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low',
+  outline: 'bg-transparent text-primary border border-primary hover:bg-primary/5',
+  danger: 'bg-error text-on-error border border-error hover:brightness-105',
+  ghost: 'bg-transparent text-on-surface-variant border border-transparent hover:bg-surface-container-high',
+}
+
+const sizes: Record<Size, string> = {
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-[18px] py-[9px] text-sm',
+  lg: 'px-6 py-3 text-base',
 }
 
 export function Button({
   variant = 'primary',
+  size = 'md',
   className = '',
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
   return (
     <button
       className={
-        'inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ' +
-        'transition disabled:cursor-not-allowed disabled:opacity-50 ' +
+        'inline-flex items-center justify-center gap-2 rounded-control font-semibold ' +
+        'transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60 ' +
         variants[variant] +
+        ' ' +
+        sizes[size] +
         ' ' +
         className
       }

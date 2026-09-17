@@ -1,55 +1,140 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ece7fe;
-  --color-brand-200: #d9d0fd;
-  --color-brand-300: #b8a9fa;
-  --color-brand-400: #9683f4;
-  --color-brand-500: #6d5ce8;
-  --color-brand-600: #5b4fcf;
-  --color-brand-700: #4a3fb0;
-  --color-brand-800: #3a3189;
+  /* Design tokens copied from the existing Daiko platform (leave-management-app)
+     so Clinic shares the exact same palette/typography/shape system. */
+  --color-surface: #f1f0fa;
+  --color-surface-dim: #d9d8e6;
+  --color-surface-bright: #f8f7fd;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f4f3fb;
+  --color-surface-container: #ececf7;
+  --color-surface-container-high: #e4e3f2;
+  --color-surface-container-highest: #dcdbee;
+  --color-on-surface: #1e1b3a;
+  --color-on-surface-variant: #5c5a76;
+  --color-inverse-surface: #2e2a4d;
+  --color-inverse-on-surface: #f1f0fa;
+  --color-outline: #7b7894;
+  --color-outline-variant: #cecbe3;
+  --color-surface-tint: #4f46e5;
+  --color-primary: #4f46e5;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4338ca;
+  --color-on-primary-container: #e7e5ff;
+  --color-inverse-primary: #c3c0ff;
+  --color-secondary: #b51b18;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d8372e;
+  --color-on-secondary-container: #fffbff;
+  --color-tertiary: #92400e;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #b45309;
+  --color-on-tertiary-container: #ffedd0;
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #e2dfff;
+  --color-primary-fixed-dim: #c3c0ff;
+  --color-on-primary-fixed: #0f0069;
+  --color-on-primary-fixed-variant: #3323cc;
+  --color-secondary-fixed: #ffdad5;
+  --color-secondary-fixed-dim: #ffb4aa;
+  --color-on-secondary-fixed: #410001;
+  --color-on-secondary-fixed-variant: #930007;
+  --color-tertiary-fixed: #ffddb4;
+  --color-tertiary-fixed-dim: #ffb955;
+  --color-on-tertiary-fixed: #291800;
+  --color-on-tertiary-fixed-variant: #633f00;
+  --color-background: #f1f0fa;
+  --color-on-background: #1e1b3a;
+  --color-surface-variant: #dcdbee;
 
-  --color-ok-bg: #e3f6e9;
-  --color-ok-text: #1f8a4c;
-  --color-ok-dot: #2fae66;
+  /* Sidebar: deep indigo (top) to bright blue (bottom), vertical gradient */
+  --color-sidebar-gradient-from: #241f5e;
+  --color-sidebar-gradient-to: #4f46e5;
 
-  --color-warn-bg: #fdecea;
-  --color-warn-text: #d1403a;
-  --color-warn-dot: #e6534c;
+  --color-annual: #B51B18;
+  --color-sick: #F5A623;
+  --color-casual: #EC4899;
+  --color-other: #6C5CE7;
 
-  --color-idle-bg: #eef0f5;
-  --color-idle-text: #6b7280;
-  --color-idle-dot: #9aa1b0;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display-stat: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-lg: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-headline-md: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-body-lg: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-body-md: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-label-caps: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-meta: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
-  --color-info-bg: #efe9fe;
-  --color-info-text: #6d4fd1;
-  --color-info-dot: #8a6cf0;
+  --text-display-stat: 36px;
+  --text-display-stat--line-height: 44px;
+  --text-display-stat--letter-spacing: -0.02em;
+  --text-display-stat--font-weight: 700;
 
-  --color-amber-bg: #fdf0e2;
-  --color-amber-text: #b56a19;
-  --color-amber-dot: #e0902f;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 700;
+
+  --font-headline-lg-mobile: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--font-weight: 700;
+
+  --text-headline-md: 20px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+
+  --text-label-caps: 12px;
+  --text-label-caps--line-height: 16px;
+  --text-label-caps--letter-spacing: 0.05em;
+  --text-label-caps--font-weight: 700;
+
+  --text-meta: 12px;
+  --text-meta--line-height: 16px;
+  --text-meta--font-weight: 500;
+
+  --spacing-container-margin: 32px;
+  --spacing-gutter: 24px;
+  --spacing-section-gap: 40px;
+  --spacing-card-padding: 24px;
+  --spacing-stack-sm: 8px;
+  --spacing-stack-md: 16px;
+
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0px 4px 20px rgba(0,0,0,0.05);
+  --shadow-modal: 0px 10px 32px rgba(0,0,0,0.12);
+
+  --color-status-pending: #b45309;
+  --color-status-approved: #146c43;
+  --color-status-rejected: #dc2626;
+  --color-status-onleave: #4f46e5;
+  --color-status-completed: #5c5a76;
 }
 
-html, body, #root {
-  min-height: 100%;
+.bg-sidebar-gradient {
+  background: linear-gradient(180deg, var(--color-sidebar-gradient-from) 0%, var(--color-sidebar-gradient-to) 100%);
 }
 
-body {
-  background:
-    radial-gradient(circle at 10% 8%, #fdf1e0 0%, transparent 42%),
-    radial-gradient(circle at 92% 6%, #f7e4ee 0%, transparent 40%),
-    radial-gradient(circle at 90% 92%, #e4dcfb 0%, transparent 55%),
-    linear-gradient(135deg, #faf7f3 0%, #f3eefb 55%, #ece5fb 100%);
-  background-attachment: fixed;
-  color: #201b33;
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 @media print {
-  body {
-    background: #fff;
-  }
   .no-print {
     display: none !important;
   }

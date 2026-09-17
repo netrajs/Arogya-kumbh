@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Topbar } from '../../components/layout/Topbar'
-import { GlassCard } from '../../components/ui/GlassCard'
+import { PageHeader } from '../../components/ui/PageHeader'
+import { Card } from '../../components/ui/Card'
 import { Input, Label } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
@@ -39,12 +39,14 @@ export function NurseVitals() {
 
   return (
     <div>
-      <Topbar title="Initial Assessment" />
+      <PageHeader title="Initial Assessment" description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <GlassCard className="p-5 lg:col-span-1">
-          <h2 className="mb-3 text-sm font-semibold text-[#3a3454]">Waiting for vitals ({queue.length})</h2>
-          {queue.length === 0 && <p className="text-sm text-[#9a93b3]">No patients waiting.</p>}
+      <div className="grid gap-gutter lg:grid-cols-3">
+        <Card className="lg:col-span-1">
+          <h2 className="mb-3 font-headline-md text-headline-md text-on-surface">
+            Waiting for vitals ({queue.length})
+          </h2>
+          {queue.length === 0 && <p className="text-body-md text-on-surface-variant">No patients waiting.</p>}
           <ul className="space-y-2">
             {queue.map((v) => {
               const patient = getPatient(v.patientId)
@@ -54,31 +56,35 @@ export function NurseVitals() {
                   <button
                     onClick={() => setSelectedId(v.id)}
                     className={
-                      'w-full rounded-2xl px-4 py-3 text-left text-sm transition ' +
-                      (isActive ? 'bg-brand-500 text-white shadow-md' : 'bg-white/55 text-[#241f3a] hover:bg-white/80')
+                      'w-full rounded-xl px-4 py-3 text-left transition ' +
+                      (isActive
+                        ? 'bg-primary text-on-primary shadow-md'
+                        : 'bg-surface-container-low text-on-surface hover:bg-surface-container')
                     }
                   >
-                    <div className="font-medium">
+                    <div className="font-body-md font-medium">
                       #{v.tokenNumber} · {patient?.name}
                     </div>
-                    <div className={isActive ? 'text-white/80' : 'text-[#9a93b3]'}>{v.ailmentSummary}</div>
+                    <div className={isActive ? 'text-on-primary/80' : 'text-on-surface-variant'}>
+                      {v.ailmentSummary}
+                    </div>
                   </button>
                 </li>
               )
             })}
           </ul>
-        </GlassCard>
+        </Card>
 
-        <GlassCard className="p-6 lg:col-span-2">
+        <Card className="lg:col-span-2">
           {!selected ? (
-            <p className="text-sm text-[#9a93b3]">Select a patient from the list to record vitals.</p>
+            <p className="text-body-md text-on-surface-variant">Select a patient from the list to record vitals.</p>
           ) : (
             <>
               <div className="mb-4">
-                <h2 className="text-lg font-semibold text-[#211c37]">
+                <h2 className="font-headline-md text-headline-md text-on-surface">
                   {getPatient(selected.patientId)?.name} · Token #{selected.tokenNumber}
                 </h2>
-                <p className="text-sm text-[#7a7396]">{selected.ailmentSummary}</p>
+                <p className="text-body-md text-on-surface-variant">{selected.ailmentSummary}</p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
@@ -105,7 +111,7 @@ export function NurseVitals() {
               </Button>
             </>
           )}
-        </GlassCard>
+        </Card>
       </div>
     </div>
   )

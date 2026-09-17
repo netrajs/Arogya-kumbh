@@ -1,30 +1,18 @@
-type Tone = 'ok' | 'warn' | 'idle' | 'info' | 'amber'
+import type { ReactNode } from 'react'
+
+type Tone = 'pending' | 'info' | 'ok' | 'idle'
 
 const tones: Record<Tone, string> = {
-  ok: 'bg-ok-bg text-ok-text',
-  warn: 'bg-warn-bg text-warn-text',
-  idle: 'bg-idle-bg text-idle-text',
-  info: 'bg-info-bg text-info-text',
-  amber: 'bg-amber-bg text-amber-text',
+  pending: 'bg-tertiary-container/20 text-tertiary-container',
+  info: 'bg-primary/10 text-primary',
+  ok: 'bg-green-500/10 text-green-700',
+  idle: 'bg-surface-container-highest text-on-surface-variant',
 }
 
-const dots: Record<Tone, string> = {
-  ok: 'bg-ok-dot',
-  warn: 'bg-warn-dot',
-  idle: 'bg-idle-dot',
-  info: 'bg-info-dot',
-  amber: 'bg-amber-dot',
-}
-
-export function Badge({ tone, children }: { tone: Tone; children: React.ReactNode }) {
+export function Badge({ tone, children }: { tone: Tone; children: ReactNode }) {
   return (
-    <span
-      className={
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ' + tones[tone]
-      }
-    >
-      <span className={'h-1.5 w-1.5 rounded-full ' + dots[tone]} />
-      {children}
-    </span>
+    <div className={`px-4 py-1.5 rounded-full inline-flex items-center justify-center ${tones[tone]}`}>
+      <span className="font-label-caps text-label-caps">{children}</span>
+    </div>
   )
 }

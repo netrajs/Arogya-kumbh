@@ -1,11 +1,15 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 
 const fieldBase =
-  'w-full rounded-2xl border border-white/70 bg-white/70 px-4 py-2.5 text-sm text-[#241f3a] ' +
-  'placeholder:text-[#9a93b3] shadow-sm outline-none transition focus:border-brand-300 focus:ring-2 focus:ring-brand-200'
+  'w-full rounded-control border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md text-on-surface ' +
+  'placeholder:text-on-surface-variant/60 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20'
 
 export function Label({ children }: { children: ReactNode }) {
-  return <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#7a7396]">{children}</label>
+  return (
+    <label className="mb-1.5 block font-label-caps text-label-caps uppercase text-on-surface-variant">
+      {children}
+    </label>
+  )
 }
 
 export function Input(props: InputHTMLAttributes<HTMLInputElement>) {
