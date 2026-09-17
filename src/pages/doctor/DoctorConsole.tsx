@@ -8,7 +8,14 @@ import { Input, Label, Select, Textarea } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
-import type { PrescriptionItem } from '../../lib/types'
+import type { PrescriptionItem, VisitStatus } from '../../lib/types'
+
+const queueStatus: Record<VisitStatus, { tone: 'pending' | 'waiting' | 'active' | 'done'; label: string }> = {
+  waiting_nurse: { tone: 'pending', label: 'With Nurse' },
+  waiting_doctor: { tone: 'waiting', label: 'Ready for you' },
+  in_consultation: { tone: 'active', label: 'In Consultation' },
+  completed: { tone: 'done', label: 'Completed' },
+}
 
 export function DoctorConsole() {
   const { getPatient, getStaffName, getRoomQueue, roomsForSite, loginDoctor, logoutDoctor, startConsultation, saveConsultation } =
@@ -22,8 +29,12 @@ export function DoctorConsole() {
   const [pickedRoom, setPickedRoom] = useState('')
 
   const queue = myRoom ? getRoomQueue(myRoom.id).filter((v) => v.status !== 'completed') : []
-  const waiting = queue.filter((v) => v.status === 'waiting_doctor')
   const current = queue.find((v) => v.status === 'in_consultation') ?? null
+  // Everyone still in the room's queue, whichever stage they're at (with the
+  // nurse, or ready for the doctor) — the doctor should see the whole queue,
+  // not just the slice that's already cleared vitals.
+  const roomQueue = queue.filter((v) => v.status !== 'in_consultation')
+  const readyForDoctor = roomQueue.filter((v) => v.status === 'waiting_doctor')
 
   const [diagnosis, setDiagnosis] = useState('')
   const [items, setItems] = useState<Omit<PrescriptionItem, 'id'>[]>([{ medicineName: '', dosage: '' }])
@@ -87,8 +98,8 @@ export function DoctorConsole() {
   }
 
   function handleNextPatient() {
-    if (waiting.length === 0) return
-    startConsultation(waiting[0].id)
+    if (readyForDoctor.length === 0) return
+    startConsultation(readyForDoctor[0].id)
     setDiagnosis('')
     setItems([{ medicineName: '', dosage: '' }])
   }
@@ -127,7 +138,7 @@ export function DoctorConsole() {
           <div>
             <p className="text-meta uppercase tracking-wide text-on-surface-variant">Queue</p>
             <p className="font-semibold text-on-surface">
-              {waiting.length} waiting{current ? ' · 1 in consultation' : ''}
+              {roomQueue.length} in queue{current ? ' · 1 in consultation' : ''}
             </p>
           </div>
         </div>
@@ -140,16 +151,16 @@ export function DoctorConsole() {
         <Panel
           glyph="groups"
           glyphClass="title-glyph title-glyph--blue"
-          title={`Waiting Queue (${waiting.length})`}
+          title={`Waiting Queue (${roomQueue.length})`}
           className="xl:col-span-4"
           action={
-            <Button size="sm" onClick={handleNextPatient} disabled={waiting.length === 0 || !!current}>
+            <Button size="sm" onClick={handleNextPatient} disabled={readyForDoctor.length === 0 || !!current}>
               Next patient
             </Button>
           }
         >
           <ul className="space-y-2">
-            {waiting.map((v) => {
+            {roomQueue.map((v) => {
               const patient = getPatient(v.patientId)
               return (
                 <li key={v.id} className="glass-soft rounded-2xl px-4 py-2.5">
@@ -157,7 +168,7 @@ export function DoctorConsole() {
                     <span className="font-body-md font-medium text-on-surface">
                       #{v.tokenNumber} · {patient?.name}
                     </span>
-                    <Badge tone="waiting">Waiting</Badge>
+                    <Badge tone={queueStatus[v.status].tone}>{queueStatus[v.status].label}</Badge>
                   </div>
                   <div className="text-meta text-on-surface-variant mt-0.5">
                     {patient?.age} yrs · {patient?.gender}
@@ -166,8 +177,8 @@ export function DoctorConsole() {
                 </li>
               )
             })}
-            {waiting.length === 0 && !current && (
-              <p className="text-body-md text-on-surface-variant">No patients waiting.</p>
+            {roomQueue.length === 0 && !current && (
+              <p className="text-body-md text-on-surface-variant">No patients in the queue.</p>
             )}
           </ul>
         </Panel>
