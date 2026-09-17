@@ -32,24 +32,56 @@ export function DoctorConsole() {
     return (
       <div className="flex flex-col w-full gap-gutter animate-fade-up">
         <PageHeader title="My Room" description={<>Daiko Clinic · {site?.name}</>} />
-        <Panel glyph="meeting_room" glyphClass="title-glyph title-glyph--indigo" title="Login to an OPD room" className="max-w-md">
-          <p className="mb-4 text-body-md text-on-surface-variant">
-            You're signed in to Daiko as <span className="font-medium text-primary">{getStaffName(active.staffId)}</span>.
-            Pick a free room at {site?.name} to start seeing patients — its existing queue (if any) transfers to you automatically.
-          </p>
-          <Select value={pickedRoom} onChange={(e) => setPickedRoom(e.target.value)} className="mb-4">
-            <option value="">Select a room</option>
-            {freeRooms.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-            {freeRooms.length === 0 && <option disabled>No free rooms right now</option>}
-          </Select>
-          <Button disabled={!pickedRoom} onClick={() => pickedRoom && loginDoctor(pickedRoom, active.staffId)}>
-            <MIcon name="login" className="text-base" /> Login
-          </Button>
-        </Panel>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+          <Panel
+            glyph="door_open"
+            glyphClass="title-glyph title-glyph--blue"
+            title="OPD rooms at this site"
+            className="xl:col-span-5"
+          >
+            <ul className="space-y-2">
+              {mySiteRooms.map((r) => (
+                <li key={r.id} className="glass-soft rounded-2xl flex items-center justify-between px-4 py-2.5">
+                  <span className="font-body-md font-medium text-on-surface">{r.name}</span>
+                  {r.currentDoctorId ? (
+                    <Badge tone="active">{getStaffName(r.currentDoctorId)}</Badge>
+                  ) : (
+                    <Badge tone="done">Available</Badge>
+                  )}
+                </li>
+              ))}
+              {mySiteRooms.length === 0 && (
+                <p className="text-body-md text-on-surface-variant">No OPD rooms configured for this site.</p>
+              )}
+            </ul>
+          </Panel>
+
+          <Panel
+            glyph="meeting_room"
+            glyphClass="title-glyph title-glyph--indigo"
+            title="Login to an OPD room"
+            className="xl:col-span-7"
+          >
+            <p className="mb-4 text-body-md text-on-surface-variant">
+              You're signed in to Daiko as <span className="font-medium text-primary">{getStaffName(active.staffId)}</span> at{' '}
+              <span className="font-medium text-on-surface">{site?.name}</span>. Pick an available room to start seeing
+              patients — its existing queue (if any) transfers to you automatically.
+            </p>
+            <Select value={pickedRoom} onChange={(e) => setPickedRoom(e.target.value)} className="mb-4">
+              <option value="">Select a room</option>
+              {freeRooms.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+              {freeRooms.length === 0 && <option disabled>No free rooms right now</option>}
+            </Select>
+            <Button disabled={!pickedRoom} onClick={() => pickedRoom && loginDoctor(pickedRoom, active.staffId)}>
+              <MIcon name="login" className="text-base" /> Login
+            </Button>
+          </Panel>
+        </div>
       </div>
     )
   }
@@ -77,10 +109,28 @@ export function DoctorConsole() {
     <div className="flex flex-col w-full gap-gutter animate-fade-up">
       <PageHeader title={myRoom.name} description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">
-          Logged in as <span className="font-semibold text-primary">{getStaffName(active.staffId)}</span>
-        </p>
+      {/* Room info strip: site / room / doctor / queue, per spec §1 */}
+      <div className="liquid-glass rounded-2xl px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+          <div>
+            <p className="text-meta uppercase tracking-wide text-on-surface-variant">Site</p>
+            <p className="font-semibold text-on-surface">{site?.name}</p>
+          </div>
+          <div>
+            <p className="text-meta uppercase tracking-wide text-on-surface-variant">OPD Room</p>
+            <p className="font-semibold text-on-surface">{myRoom.name}</p>
+          </div>
+          <div>
+            <p className="text-meta uppercase tracking-wide text-on-surface-variant">Doctor</p>
+            <p className="font-semibold text-primary">{getStaffName(active.staffId)}</p>
+          </div>
+          <div>
+            <p className="text-meta uppercase tracking-wide text-on-surface-variant">Queue</p>
+            <p className="font-semibold text-on-surface">
+              {waiting.length} waiting{current ? ' · 1 in consultation' : ''}
+            </p>
+          </div>
+        </div>
         <Button variant="secondary" onClick={() => logoutDoctor(myRoom.id)}>
           <MIcon name="logout" className="text-base" /> Logout of room
         </Button>
@@ -90,7 +140,7 @@ export function DoctorConsole() {
         <Panel
           glyph="groups"
           glyphClass="title-glyph title-glyph--blue"
-          title={`Waiting (${waiting.length})`}
+          title={`Waiting Queue (${waiting.length})`}
           className="xl:col-span-4"
           action={
             <Button size="sm" onClick={handleNextPatient} disabled={waiting.length === 0 || !!current}>
@@ -99,14 +149,23 @@ export function DoctorConsole() {
           }
         >
           <ul className="space-y-2">
-            {waiting.map((v) => (
-              <li key={v.id} className="glass-soft rounded-2xl px-4 py-2.5">
-                <div className="font-body-md font-medium text-on-surface">
-                  #{v.tokenNumber} · {getPatient(v.patientId)?.name}
-                </div>
-                <div className="text-on-surface-variant">{v.ailmentSummary}</div>
-              </li>
-            ))}
+            {waiting.map((v) => {
+              const patient = getPatient(v.patientId)
+              return (
+                <li key={v.id} className="glass-soft rounded-2xl px-4 py-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-body-md font-medium text-on-surface">
+                      #{v.tokenNumber} · {patient?.name}
+                    </span>
+                    <Badge tone="waiting">Waiting</Badge>
+                  </div>
+                  <div className="text-meta text-on-surface-variant mt-0.5">
+                    {patient?.age} yrs · {patient?.gender}
+                  </div>
+                  <div className="text-on-surface-variant">{v.ailmentSummary}</div>
+                </li>
+              )
+            })}
             {waiting.length === 0 && !current && (
               <p className="text-body-md text-on-surface-variant">No patients waiting.</p>
             )}
@@ -118,15 +177,22 @@ export function DoctorConsole() {
             <p className="text-body-md text-on-surface-variant">Click "Next patient" to start a consultation.</p>
           ) : (
             <>
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h3 className="font-headline-md text-headline-md text-on-surface">
-                    {getPatient(current.patientId)?.name} · Token #{current.tokenNumber}
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant">{current.ailmentSummary}</p>
-                </div>
-                <Badge tone="active">In Consultation</Badge>
-              </div>
+              {(() => {
+                const patient = getPatient(current.patientId)
+                return (
+                  <div className="mb-4 flex items-start justify-between">
+                    <div>
+                      <h3 className="font-headline-md text-headline-md text-on-surface">
+                        {patient?.name} · Token #{current.tokenNumber}
+                      </h3>
+                      <p className="text-body-md text-on-surface-variant">
+                        {patient?.age} yrs · {patient?.gender} · {current.ailmentSummary}
+                      </p>
+                    </div>
+                    <Badge tone="active">In Consultation</Badge>
+                  </div>
+                )
+              })()}
 
               <div className="liquid-glass mb-5 grid grid-cols-3 gap-3 rounded-2xl p-4 text-center">
                 <div>

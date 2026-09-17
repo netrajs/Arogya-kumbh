@@ -6,10 +6,12 @@ import { useClinic } from '../../lib/store'
 
 export function PrescriptionPrint() {
   const { visitId } = useParams<{ visitId: string }>()
-  const { getVisit, getPatient, getStaffName } = useClinic()
+  const { state, getVisit, getPatient, getStaffName } = useClinic()
 
   const visit = visitId ? getVisit(visitId) : undefined
   const patient = visit ? getPatient(visit.patientId) : undefined
+  const room = visit ? state.rooms.find((r) => r.id === visit.roomId) : undefined
+  const visitSite = visit ? state.sites.find((s) => s.id === visit.siteId) : undefined
 
   if (!visit || !patient || !visit.consultation) {
     return (
@@ -39,6 +41,9 @@ export function PrescriptionPrint() {
           <DaikoLogo className="mb-2 h-10 w-10" />
           <h1 className="font-headline-lg text-2xl font-bold tracking-wide text-primary">AROGYA KUMBH</h1>
           <p className="font-meta text-meta tracking-widest text-on-surface-variant">CLINIC</p>
+          <p className="mt-1 text-meta text-on-surface-variant">
+            {visitSite?.name} · {room?.name}
+          </p>
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-2 text-body-md">
