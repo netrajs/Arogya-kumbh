@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ece7fe;
+  --color-brand-200: #d9d0fd;
+  --color-brand-300: #b8a9fa;
+  --color-brand-400: #9683f4;
+  --color-brand-500: #6d5ce8;
+  --color-brand-600: #5b4fcf;
+  --color-brand-700: #4a3fb0;
+  --color-brand-800: #3a3189;
+
+  --color-ok-bg: #e3f6e9;
+  --color-ok-text: #1f8a4c;
+  --color-ok-dot: #2fae66;
+
+  --color-warn-bg: #fdecea;
+  --color-warn-text: #d1403a;
+  --color-warn-dot: #e6534c;
+
+  --color-idle-bg: #eef0f5;
+  --color-idle-text: #6b7280;
+  --color-idle-dot: #9aa1b0;
+
+  --color-info-bg: #efe9fe;
+  --color-info-text: #6d4fd1;
+  --color-info-dot: #8a6cf0;
+
+  --color-amber-bg: #fdf0e2;
+  --color-amber-text: #b56a19;
+  --color-amber-dot: #e0902f;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 10% 8%, #fdf1e0 0%, transparent 42%),
+    radial-gradient(circle at 92% 6%, #f7e4ee 0%, transparent 40%),
+    radial-gradient(circle at 90% 92%, #e4dcfb 0%, transparent 55%),
+    linear-gradient(135deg, #faf7f3 0%, #f3eefb 55%, #ece5fb 100%);
+  background-attachment: fixed;
+  color: #201b33;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
