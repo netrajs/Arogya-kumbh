@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { Card } from '../../components/ui/Card'
+import { Panel } from '../../components/ui/Panel'
 import { Badge } from '../../components/ui/Badge'
 import { MIcon } from '../../components/ui/MIcon'
 import { Input, Label, Select, Textarea } from '../../components/ui/Field'
@@ -30,10 +30,9 @@ export function DoctorConsole() {
 
   if (!myRoom) {
     return (
-      <div>
+      <div className="flex flex-col w-full gap-gutter animate-fade-up">
         <PageHeader title="My Room" description={<>Daiko Clinic · {site?.name}</>} />
-        <Card className="max-w-md">
-          <h2 className="mb-1 font-headline-md text-headline-md text-on-surface">Login to an OPD room</h2>
+        <Panel glyph="meeting_room" glyphClass="title-glyph title-glyph--indigo" title="Login to an OPD room" className="max-w-md">
           <p className="mb-4 text-body-md text-on-surface-variant">
             You're signed in to Daiko as <span className="font-medium text-primary">{getStaffName(active.staffId)}</span>.
             Pick a free room at {site?.name} to start seeing patients — its existing queue (if any) transfers to you automatically.
@@ -50,7 +49,7 @@ export function DoctorConsole() {
           <Button disabled={!pickedRoom} onClick={() => pickedRoom && loginDoctor(pickedRoom, active.staffId)}>
             <MIcon name="login" className="text-base" /> Login
           </Button>
-        </Card>
+        </Panel>
       </div>
     )
   }
@@ -75,10 +74,10 @@ export function DoctorConsole() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col w-full gap-gutter animate-fade-up">
       <PageHeader title={myRoom.name} description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <p className="text-body-md text-on-surface-variant">
           Logged in as <span className="font-semibold text-primary">{getStaffName(active.staffId)}</span>
         </p>
@@ -87,17 +86,21 @@ export function DoctorConsole() {
         </Button>
       </div>
 
-      <div className="grid gap-gutter lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-headline-md text-headline-md text-on-surface">Waiting ({waiting.length})</h2>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+        <Panel
+          glyph="groups"
+          glyphClass="title-glyph title-glyph--blue"
+          title={`Waiting (${waiting.length})`}
+          className="xl:col-span-4"
+          action={
             <Button size="sm" onClick={handleNextPatient} disabled={waiting.length === 0 || !!current}>
               Next patient
             </Button>
-          </div>
+          }
+        >
           <ul className="space-y-2">
             {waiting.map((v) => (
-              <li key={v.id} className="rounded-xl bg-surface-container-low px-4 py-2.5">
+              <li key={v.id} className="glass-soft rounded-2xl px-4 py-2.5">
                 <div className="font-body-md font-medium text-on-surface">
                   #{v.tokenNumber} · {getPatient(v.patientId)?.name}
                 </div>
@@ -108,24 +111,24 @@ export function DoctorConsole() {
               <p className="text-body-md text-on-surface-variant">No patients waiting.</p>
             )}
           </ul>
-        </Card>
+        </Panel>
 
-        <Card className="lg:col-span-2">
+        <Panel glyph="stethoscope" glyphClass="title-glyph title-glyph--indigo" title="Consultation" className="xl:col-span-8">
           {!current ? (
             <p className="text-body-md text-on-surface-variant">Click "Next patient" to start a consultation.</p>
           ) : (
             <>
               <div className="mb-4 flex items-start justify-between">
                 <div>
-                  <h2 className="font-headline-md text-headline-md text-on-surface">
+                  <h3 className="font-headline-md text-headline-md text-on-surface">
                     {getPatient(current.patientId)?.name} · Token #{current.tokenNumber}
-                  </h2>
+                  </h3>
                   <p className="text-body-md text-on-surface-variant">{current.ailmentSummary}</p>
                 </div>
-                <Badge tone="ok">In Consultation</Badge>
+                <Badge tone="active">In Consultation</Badge>
               </div>
 
-              <div className="mb-5 grid grid-cols-3 gap-3 rounded-xl bg-surface-container-low p-4 text-center">
+              <div className="liquid-glass mb-5 grid grid-cols-3 gap-3 rounded-2xl p-4 text-center">
                 <div>
                   <p className="text-meta text-on-surface-variant">Weight</p>
                   <p className="font-semibold text-on-surface">{current.vitals?.weightKg ?? '—'} kg</p>
@@ -181,7 +184,7 @@ export function DoctorConsole() {
                 <button
                   type="button"
                   onClick={() => setItems([...items, { medicineName: '', dosage: '' }])}
-                  className="mt-2 inline-flex items-center gap-1 font-body-md text-body-md font-medium text-primary hover:text-primary-container"
+                  className="mt-2 inline-flex items-center gap-1 font-body-md text-body-md font-medium text-primary hover:underline"
                 >
                   <MIcon name="add" className="text-lg" /> Add medicine
                 </button>
@@ -192,7 +195,7 @@ export function DoctorConsole() {
               </Button>
             </>
           )}
-        </Card>
+        </Panel>
       </div>
     </div>
   )

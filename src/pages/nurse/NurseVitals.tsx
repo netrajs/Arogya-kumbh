@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { Card } from '../../components/ui/Card'
+import { Panel } from '../../components/ui/Panel'
 import { Input, Label } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
@@ -38,14 +38,16 @@ export function NurseVitals() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col w-full gap-gutter animate-fade-up">
       <PageHeader title="Initial Assessment" description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="grid gap-gutter lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <h2 className="mb-3 font-headline-md text-headline-md text-on-surface">
-            Waiting for vitals ({queue.length})
-          </h2>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+        <Panel
+          glyph="groups"
+          glyphClass="title-glyph title-glyph--blue"
+          title={`Waiting for vitals (${queue.length})`}
+          className="xl:col-span-4"
+        >
           {queue.length === 0 && <p className="text-body-md text-on-surface-variant">No patients waiting.</p>}
           <ul className="space-y-2">
             {queue.map((v) => {
@@ -56,34 +58,30 @@ export function NurseVitals() {
                   <button
                     onClick={() => setSelectedId(v.id)}
                     className={
-                      'w-full rounded-xl px-4 py-3 text-left transition ' +
-                      (isActive
-                        ? 'bg-primary text-on-primary shadow-md'
-                        : 'bg-surface-container-low text-on-surface hover:bg-surface-container')
+                      'w-full rounded-2xl px-4 py-3 text-left transition ' +
+                      (isActive ? 'bg-primary text-on-primary shadow-md' : 'glass-soft text-on-surface hover:bg-white/70')
                     }
                   >
                     <div className="font-body-md font-medium">
                       #{v.tokenNumber} · {patient?.name}
                     </div>
-                    <div className={isActive ? 'text-on-primary/80' : 'text-on-surface-variant'}>
-                      {v.ailmentSummary}
-                    </div>
+                    <div className={isActive ? 'text-white/80' : 'text-on-surface-variant'}>{v.ailmentSummary}</div>
                   </button>
                 </li>
               )
             })}
           </ul>
-        </Card>
+        </Panel>
 
-        <Card className="lg:col-span-2">
+        <Panel glyph="monitor_heart" glyphClass="title-glyph title-glyph--indigo" title="Record vitals" className="xl:col-span-8">
           {!selected ? (
             <p className="text-body-md text-on-surface-variant">Select a patient from the list to record vitals.</p>
           ) : (
             <>
               <div className="mb-4">
-                <h2 className="font-headline-md text-headline-md text-on-surface">
+                <h3 className="font-headline-md text-headline-md text-on-surface">
                   {getPatient(selected.patientId)?.name} · Token #{selected.tokenNumber}
-                </h2>
+                </h3>
                 <p className="text-body-md text-on-surface-variant">{selected.ailmentSummary}</p>
               </div>
 
@@ -111,7 +109,7 @@ export function NurseVitals() {
               </Button>
             </>
           )}
-        </Card>
+        </Panel>
       </div>
     </div>
   )

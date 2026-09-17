@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
-import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { MIcon } from '../../components/ui/MIcon'
+import { DaikoLogo } from '../../components/ui/DaikoLogo'
 import { useClinic } from '../../lib/store'
 
 export function PrescriptionPrint() {
@@ -13,7 +13,7 @@ export function PrescriptionPrint() {
 
   if (!visit || !patient || !visit.consultation) {
     return (
-      <div className="mx-auto max-w-2xl p-8 font-body-md">
+      <div className="app-canvas min-h-screen p-8 font-body-md">
         <p className="text-body-md text-on-surface-variant">Prescription not found.</p>
         <Link to="/doctor" className="text-primary">Back to My Room</Link>
       </div>
@@ -24,7 +24,7 @@ export function PrescriptionPrint() {
   const consultedDate = new Date(consultation.consultedAt).toLocaleDateString('en-IN')
 
   return (
-    <div className="mx-auto min-h-screen max-w-2xl bg-surface p-4 font-body-md sm:p-8">
+    <div className="app-canvas mx-auto min-h-screen max-w-2xl p-4 font-body-md sm:p-8">
       <div className="no-print mb-4 flex items-center justify-between">
         <Link to="/doctor" className="inline-flex items-center gap-1 font-body-md text-body-md font-medium text-primary">
           <MIcon name="arrow_back" className="text-base" /> Back to My Room
@@ -34,8 +34,9 @@ export function PrescriptionPrint() {
         </Button>
       </div>
 
-      <Card className="print:rounded-none print:border-none print:shadow-none">
-        <div className="mb-6 text-center">
+      <div className="card-surface p-card-padding print:rounded-none print:shadow-none">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <DaikoLogo className="mb-2 h-10 w-10" />
           <h1 className="font-headline-lg text-2xl font-bold tracking-wide text-primary">AROGYA KUMBH</h1>
           <p className="font-meta text-meta tracking-widest text-on-surface-variant">CLINIC</p>
         </div>
@@ -47,7 +48,7 @@ export function PrescriptionPrint() {
           <p><span className="text-on-surface-variant">Gender:</span> <span className="font-medium">{patient.gender}</span></p>
         </div>
 
-        <div className="mb-6 grid grid-cols-3 gap-3 rounded-xl bg-surface-container-low p-4 text-center print:bg-transparent">
+        <div className="liquid-glass mb-6 grid grid-cols-3 gap-3 rounded-2xl p-4 text-center print:bg-transparent print:shadow-none">
           <div>
             <p className="text-meta text-on-surface-variant">Weight</p>
             <p className="font-semibold text-on-surface">{vitals?.weightKg ?? '—'} kg</p>
@@ -88,7 +89,7 @@ export function PrescriptionPrint() {
           <span>Doctor: {getStaffName(consultation.doctorId)}</span>
           <span>Date: {consultedDate}</span>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

@@ -13,7 +13,7 @@ export function MIcon({
 }) {
   return (
     <span
-      className={`material-symbols-outlined select-none ${className}`}
+      className={`material-symbols-rounded select-none ${className}`}
       style={filled ? { fontVariationSettings: "'FILL' 1", ...style } : style}
     >
       {name}

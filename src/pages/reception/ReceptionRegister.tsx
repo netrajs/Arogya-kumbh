@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
-import { Card } from '../../components/ui/Card'
+import { Panel } from '../../components/ui/Panel'
 import { Input, Label, Select, Textarea } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
@@ -46,11 +46,11 @@ export function ReceptionRegister() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col w-full gap-gutter animate-fade-up">
       <PageHeader title="Register Patient" description={<>Daiko Clinic · {site?.name}</>} />
 
-      <div className="grid gap-gutter lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+        <Panel glyph="person_add" glyphClass="title-glyph title-glyph--indigo" title="Patient details" className="xl:col-span-8">
           <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <Label>Patient name</Label>
@@ -96,15 +96,14 @@ export function ReceptionRegister() {
               </Button>
             </div>
           </form>
-        </Card>
+        </Panel>
 
-        <Card>
-          <h2 className="mb-3 font-headline-md text-headline-md text-on-surface">Available OPD</h2>
+        <Panel glyph="meeting_room" glyphClass="title-glyph title-glyph--blue" title="Available OPD" className="xl:col-span-4">
           <ul className="space-y-2">
             {myRooms.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-2.5 text-body-md"
+                className="glass-soft rounded-2xl flex items-center justify-between px-4 py-2.5 text-body-md"
               >
                 <span className="font-medium text-on-surface">{r.name}</span>
                 <span className={r.currentDoctorId ? 'text-primary' : 'text-on-surface-variant'}>
@@ -115,13 +114,13 @@ export function ReceptionRegister() {
           </ul>
 
           {confirmation && (
-            <div className="mt-5 rounded-xl bg-primary/10 p-4 text-center">
+            <div className="liquid-glass mt-5 rounded-2xl p-4 text-center">
               <p className="font-label-caps text-label-caps uppercase text-primary">Token issued</p>
               <p className="mt-1 font-display-stat text-display-stat text-primary">#{confirmation.token}</p>
               <p className="mt-1 text-meta text-on-surface-variant">Assigned to {confirmation.doctor}</p>
             </div>
           )}
-        </Card>
+        </Panel>
       </div>
     </div>
   )

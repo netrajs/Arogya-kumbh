@@ -2,13 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Daiko mark. Same geometry as src/components/ui/DaikoLogo.tsx, inlined so the
+         tab icon needs no extra request. %23 is an escaped '#' in a data URI. -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 430 430'><defs><mask id='r'><rect x='75' y='120' width='280' height='235' rx='100' fill='%23fff'/><rect x='126' y='180' width='180' height='116' rx='58' fill='%23000'/></mask></defs><rect x='175' y='74' width='88' height='32' rx='11' fill='%232A0059'/><g mask='url(%23r)'><rect x='75' y='120' width='280' height='235' fill='%237C6CFB'/><path d='M75 120 H215 L258 150 L215 178 V298 L258 326 L215 355 H75 Z' fill='%232A0059'/></g></svg>"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Daiko Clinic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
 import { MIcon } from '../ui/MIcon'
@@ -8,6 +9,12 @@ const roleLabels: Record<StaffRole, string> = {
   receptionist: 'Receptionist',
   nurse: 'Nurse',
   doctor: 'Doctor',
+}
+
+const primaryAction: Record<StaffRole, { label: string; to: string; icon: string }> = {
+  receptionist: { label: 'Register patient', to: '/reception/register', icon: 'person_add' },
+  nurse: { label: 'Vitals queue', to: '/nurse', icon: 'monitor_heart' },
+  doctor: { label: 'My room', to: '/doctor', icon: 'meeting_room' },
 }
 
 function getInitials(name: string) {
@@ -21,9 +28,13 @@ function getInitials(name: string) {
     .slice(0, 2)
 }
 
+const iconBtn =
+  'w-11 h-11 rounded-full glass flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors'
+
 export function Topbar() {
   const { staff } = useClinic()
   const { active, setActive, staffMember, site } = useActiveUser()
+  const navigate = useNavigate()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -38,54 +49,47 @@ export function Topbar() {
   }, [])
 
   const staffForRole = staff.filter((s) => s.role === active.role)
+  const action = primaryAction[active.role]
 
   return (
-    <header className="fixed top-0 left-[88px] right-0 h-20 bg-surface/80 backdrop-blur-xl z-40 flex items-center justify-between px-container-margin gap-8">
-      <div className="flex-1 max-w-xl">
-        <div className="relative flex items-center w-full">
-          <MIcon name="search" className="absolute left-5 text-on-surface-variant" />
-          <input
-            className="w-full h-12 bg-surface-container-low border-none rounded-full pl-12 pr-6 text-body-md focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-            placeholder="Search patients, tokens…"
-            type="text"
-          />
-        </div>
-      </div>
+    <header className="sticky top-0 z-40 flex items-center justify-end gap-3 px-container-margin pt-6 pb-2">
+      <button
+        type="button"
+        onClick={() => navigate(action.to)}
+        className="liquid-glass rounded-full h-11 pl-4 pr-5 flex items-center gap-2 text-on-surface font-medium text-body-md hover:text-primary transition-colors"
+      >
+        <MIcon name={action.icon} className="text-[20px] text-primary" />
+        {action.label}
+      </button>
 
-      <div className="flex items-center gap-6">
-        <button className="relative p-2 rounded-full hover:bg-surface-container-high transition-colors">
-          <MIcon name="notifications" className="text-on-surface-variant" />
+      <div className="relative" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setShowMenu((p) => !p)}
+          className="w-11 h-11 rounded-full bg-gradient-to-br from-[#9d86ff] to-[#5b3fe4] text-white font-semibold text-[13px] flex items-center justify-center shadow-[0_6px_18px_rgba(91,63,228,0.35)] ring-2 ring-white/70 hover:ring-white transition-all"
+          title={staffMember?.name ?? 'Profile'}
+        >
+          {staffMember ? getInitials(staffMember.name) : '?'}
         </button>
 
-        <div className="relative" ref={menuRef}>
-          <div
-            className="flex items-center gap-4 border-l border-outline-variant pl-6 cursor-pointer"
-            onClick={() => setShowMenu((prev) => !prev)}
-          >
-            <div className="hidden sm:block text-right">
-              <p className="font-headline-md text-on-surface text-sm">{staffMember?.name ?? 'User'}</p>
-              <p className="text-meta text-on-surface-variant capitalize">
-                {roleLabels[active.role]} · {site?.name ?? '—'}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold">
-              {staffMember ? getInitials(staffMember.name) : '?'}
-            </div>
-          </div>
-
-          {showMenu && (
-            <div className="absolute right-0 mt-2 w-72 bg-surface-container-lowest rounded-xl shadow-modal border border-outline-variant/30 overflow-hidden z-50">
-              <div className="p-4 border-b border-surface-container-high/50">
-                <p className="text-meta font-meta text-on-surface-variant uppercase tracking-wider mb-1">
-                  Demo sign-in (stands in for platform login)
-                </p>
-                <p className="text-body-md text-on-surface-variant">
-                  Real deployments authenticate via the platform's existing account + role system.
-                </p>
+        {showMenu && (
+          <div className="absolute right-0 mt-2 w-72 glass rounded-2xl shadow-modal overflow-hidden animate-fade-up z-50">
+            <div className="p-4 border-b border-white/60">
+              <div className="font-headline-md text-[14px] text-on-surface truncate">{staffMember?.name}</div>
+              <div className="text-meta text-on-surface-variant truncate">
+                {site?.name ?? '—'} · Daiko Clinic
               </div>
+              <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
+                {roleLabels[active.role]}
+              </div>
+            </div>
 
-              <div className="p-4 flex flex-col gap-3">
-                <label className="text-meta font-meta text-on-surface-variant uppercase tracking-wider">Role</label>
+            <div className="p-4 flex flex-col gap-3 border-b border-white/60">
+              <p className="text-meta text-on-surface-variant">
+                Demo sign-in stands in for the platform's account + role login.
+              </p>
+              <div>
+                <label className="text-meta font-medium text-on-surface-variant block mb-1">Role</label>
                 <select
                   value={active.role}
                   onChange={(e) => {
@@ -93,7 +97,7 @@ export function Topbar() {
                     const first = staff.find((s) => s.role === role)
                     setActive({ role, staffId: first?.id ?? '' })
                   }}
-                  className="h-10 rounded-control border border-outline-variant bg-surface-container-lowest px-3 text-body-md outline-none focus:ring-2 focus:ring-primary/20"
+                  className="field !py-2 !text-[13px]"
                 >
                   {(Object.keys(roleLabels) as StaffRole[]).map((r) => (
                     <option key={r} value={r}>
@@ -101,14 +105,13 @@ export function Topbar() {
                     </option>
                   ))}
                 </select>
-
-                <label className="text-meta font-meta text-on-surface-variant uppercase tracking-wider mt-1">
-                  Signed in as
-                </label>
+              </div>
+              <div>
+                <label className="text-meta font-medium text-on-surface-variant block mb-1">Signed in as</label>
                 <select
                   value={active.staffId}
                   onChange={(e) => setActive({ role: active.role, staffId: e.target.value })}
-                  className="h-10 rounded-control border border-outline-variant bg-surface-container-lowest px-3 text-body-md outline-none focus:ring-2 focus:ring-primary/20"
+                  className="field !py-2 !text-[13px]"
                 >
                   {staffForRole.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -118,9 +121,13 @@ export function Topbar() {
                 </select>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+
+      <button type="button" className={iconBtn} title="Notifications">
+        <MIcon name="notifications" className="text-[21px]" />
+      </button>
     </header>
   )
 }
