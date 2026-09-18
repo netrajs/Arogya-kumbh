@@ -16,17 +16,39 @@ const statusBadge: Record<VisitStatus, { tone: 'pending' | 'waiting' | 'active' 
 }
 
 export function ReceptionQueues() {
-  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit, setEmergency } = useClinic()
+  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit, moveEntireQueue, setEmergency } = useClinic()
   const { site } = useActiveUser()
 
   const myRooms = site ? roomsForSite(site.id) : []
   const [activeRoomId, setActiveRoomId] = useState('')
   const activeRoom = myRooms.find((r) => r.id === activeRoomId) ?? myRooms[0]
   const queue = activeRoom ? getRoomQueue(activeRoom.id) : []
+  const otherRooms = myRooms.filter((r) => r.id !== activeRoom?.id)
+
+  const [pendingMoveToRoomId, setPendingMoveToRoomId] = useState('')
+  const pendingMoveToRoom = myRooms.find((r) => r.id === pendingMoveToRoomId)
+
+  function confirmMoveEntireQueue() {
+    if (!activeRoom || !pendingMoveToRoomId) return
+    moveEntireQueue(activeRoom.id, pendingMoveToRoomId)
+    setPendingMoveToRoomId('')
+  }
 
   return (
     <div className="flex flex-col w-full gap-gutter animate-fade-up">
-      <PageHeader title="OPD Queues" description={<>Daiko Clinic · {site?.name}</>} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="OPD Queues" description={<>Daiko Clinic · {site?.name}</>} />
+        {site && (
+          <a
+            href={`/display?site=${site.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-outline-variant bg-surface-container-lowest px-4 py-2 font-body-md text-body-md font-medium text-on-surface-variant hover:text-primary hover:border-primary/40"
+          >
+            <MIcon name="tv" className="text-lg" /> Open queue display
+          </a>
+        )}
+      </div>
 
       <Panel
         glyph="meeting_room"
@@ -34,9 +56,25 @@ export function ReceptionQueues() {
         title="Rooms"
         action={
           activeRoom && (
-            <span className={'text-meta font-medium ' + (activeRoom.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
-              {activeRoom.currentDoctorId ? getStaffName(activeRoom.currentDoctorId) : 'Unattended'}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className={'text-meta font-medium ' + (activeRoom.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
+                {activeRoom.currentDoctorId ? getStaffName(activeRoom.currentDoctorId) : 'Unattended'}
+              </span>
+              {queue.length > 0 && otherRooms.length > 0 && (
+                <Select
+                  value={pendingMoveToRoomId}
+                  onChange={(e) => setPendingMoveToRoomId(e.target.value)}
+                  className="!w-auto !py-1.5 !text-xs"
+                >
+                  <option value="">Move entire queue to…</option>
+                  {otherRooms.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} — {r.currentDoctorId ? getStaffName(r.currentDoctorId) : 'Unattended'}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </div>
           )
         }
       >
@@ -52,7 +90,10 @@ export function ReceptionQueues() {
                   <button
                     key={room.id}
                     type="button"
-                    onClick={() => setActiveRoomId(room.id)}
+                    onClick={() => {
+                      setActiveRoomId(room.id)
+                      setPendingMoveToRoomId('')
+                    }}
                     className={
                       'inline-flex items-center gap-2 rounded-full px-4 py-2 font-body-md text-body-md font-medium transition-colors ' +
                       (isActive
@@ -76,12 +117,36 @@ export function ReceptionQueues() {
               })}
             </div>
 
+            {pendingMoveToRoom && activeRoom && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-error/10 px-4 py-3">
+                <p className="text-body-md text-on-surface">
+                  Move all <strong>{queue.length}</strong> patient(s) from <strong>{activeRoom.name}</strong> to{' '}
+                  <strong>{pendingMoveToRoom.name}</strong>? Token numbers will be reissued for {pendingMoveToRoom.name}.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPendingMoveToRoomId('')}
+                    className="rounded-full px-3 py-1.5 text-[13px] font-medium text-on-surface-variant hover:bg-black/5"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmMoveEntireQueue}
+                    className="rounded-full bg-error px-4 py-1.5 text-[13px] font-medium text-on-error hover:brightness-105"
+                  >
+                    Confirm move
+                  </button>
+                </div>
+              </div>
+            )}
+
             {queue.length === 0 && <p className="text-body-md text-on-surface-variant">Queue is empty.</p>}
 
             <ul className="space-y-2">
               {queue.map((visit: Visit) => {
                 const patient = getPatient(visit.patientId)
-                const otherRooms = myRooms.filter((r) => r.id !== activeRoom?.id)
                 const canEscalate = visit.status !== 'completed' && visit.status !== 'in_consultation'
                 return (
                   <li

@@ -77,6 +77,7 @@ interface ClinicApi {
     isEmergency?: boolean
   }) => Visit
   reassignVisit: (visitId: string, newRoomId: string) => void
+  moveEntireQueue: (fromRoomId: string, toRoomId: string) => void
   setEmergency: (visitId: string, isEmergency: boolean) => void
   loginDoctor: (roomId: string, doctorId: string) => void
   logoutDoctor: (roomId: string) => void
@@ -97,6 +98,22 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
+
+  // A queue-display screen is meant to sit in its own browser tab and just
+  // watch — pick up whatever reception/nurse/doctor do in their own tabs
+  // without needing a manual refresh.
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY || !e.newValue) return
+      try {
+        setState(JSON.parse(e.newValue) as ClinicState)
+      } catch {
+        // ignore corrupt payloads from another tab mid-write
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
 
   const api = useMemo<ClinicApi>(() => {
     const getStaffName = (staffId: string) =>
@@ -162,6 +179,30 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
           ...prev,
           visits: prev.visits.map((v) => (v.id === visitId ? { ...v, isEmergency } : v)),
         }))
+      },
+
+      // Move every non-completed visit out of one room's queue and into
+      // another's, re-issuing token numbers in the destination room's own
+      // sequence (so they don't collide with whatever's already there),
+      // while preserving the emergency-first / arrival order they had.
+      moveEntireQueue: (fromRoomId, toRoomId) => {
+        setState((prev) => {
+          const moving = prev.visits
+            .filter((v) => v.roomId === fromRoomId && v.status !== 'completed')
+            .sort(byQueueOrder)
+          if (moving.length === 0) return prev
+
+          let counter = prev.tokenCounters[toRoomId] ?? 0
+          const newTokenById = new Map(moving.map((v) => [v.id, ++counter]))
+
+          return {
+            ...prev,
+            visits: prev.visits.map((v) =>
+              newTokenById.has(v.id) ? { ...v, roomId: toRoomId, tokenNumber: newTokenById.get(v.id)! } : v,
+            ),
+            tokenCounters: { ...prev.tokenCounters, [toRoomId]: counter },
+          }
+        })
       },
 
       loginDoctor: (roomId, doctorId) => {

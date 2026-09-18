@@ -8,6 +8,7 @@ import { NurseVitals } from './pages/nurse/NurseVitals'
 import { DoctorConsole } from './pages/doctor/DoctorConsole'
 import { PrescriptionPrint } from './pages/doctor/PrescriptionPrint'
 import { Doctors } from './pages/Doctors'
+import { DisplayBoard } from './pages/DisplayBoard'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/prescription/:visitId" element={<PrescriptionPrint />} />
+            <Route path="/display" element={<DisplayBoard />} />
             <Route
               path="*"
               element={
