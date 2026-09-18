@@ -16,7 +16,7 @@ const statusBadge: Record<VisitStatus, { tone: 'pending' | 'waiting' | 'active' 
 }
 
 export function ReceptionQueues() {
-  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit, moveEntireQueue, setEmergency } = useClinic()
+  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit, moveVisits, setEmergency } = useClinic()
   const { site } = useActiveUser()
 
   const myRooms = site ? roomsForSite(site.id) : []
@@ -24,13 +24,33 @@ export function ReceptionQueues() {
   const activeRoom = myRooms.find((r) => r.id === activeRoomId) ?? myRooms[0]
   const queue = activeRoom ? getRoomQueue(activeRoom.id) : []
   const otherRooms = myRooms.filter((r) => r.id !== activeRoom?.id)
+  // A patient currently being seen isn't up for grabs — everyone else
+  // (with the nurse or waiting for the doctor) can be selected and moved.
+  const movable = queue.filter((v) => v.status !== 'in_consultation')
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [pendingMoveToRoomId, setPendingMoveToRoomId] = useState('')
   const pendingMoveToRoom = myRooms.find((r) => r.id === pendingMoveToRoomId)
+  const allSelected = movable.length > 0 && movable.every((v) => selectedIds.includes(v.id))
 
-  function confirmMoveEntireQueue() {
-    if (!activeRoom || !pendingMoveToRoomId) return
-    moveEntireQueue(activeRoom.id, pendingMoveToRoomId)
+  function switchRoom(roomId: string) {
+    setActiveRoomId(roomId)
+    setSelectedIds([])
+    setPendingMoveToRoomId('')
+  }
+
+  function toggleSelected(visitId: string) {
+    setSelectedIds((prev) => (prev.includes(visitId) ? prev.filter((id) => id !== visitId) : [...prev, visitId]))
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(allSelected ? [] : movable.map((v) => v.id))
+  }
+
+  function confirmMoveSelected() {
+    if (selectedIds.length === 0 || !pendingMoveToRoomId) return
+    moveVisits(selectedIds, pendingMoveToRoomId)
+    setSelectedIds([])
     setPendingMoveToRoomId('')
   }
 
@@ -56,25 +76,9 @@ export function ReceptionQueues() {
         title="Rooms"
         action={
           activeRoom && (
-            <div className="flex items-center gap-3">
-              <span className={'text-meta font-medium ' + (activeRoom.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
-                {activeRoom.currentDoctorId ? getStaffName(activeRoom.currentDoctorId) : 'Unattended'}
-              </span>
-              {queue.length > 0 && otherRooms.length > 0 && (
-                <Select
-                  value={pendingMoveToRoomId}
-                  onChange={(e) => setPendingMoveToRoomId(e.target.value)}
-                  className="!w-auto !py-1.5 !text-xs"
-                >
-                  <option value="">Move entire queue to…</option>
-                  {otherRooms.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} — {r.currentDoctorId ? getStaffName(r.currentDoctorId) : 'Unattended'}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </div>
+            <span className={'text-meta font-medium ' + (activeRoom.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
+              {activeRoom.currentDoctorId ? getStaffName(activeRoom.currentDoctorId) : 'Unattended'}
+            </span>
           )
         }
       >
@@ -90,10 +94,7 @@ export function ReceptionQueues() {
                   <button
                     key={room.id}
                     type="button"
-                    onClick={() => {
-                      setActiveRoomId(room.id)
-                      setPendingMoveToRoomId('')
-                    }}
+                    onClick={() => switchRoom(room.id)}
                     className={
                       'inline-flex items-center gap-2 rounded-full px-4 py-2 font-body-md text-body-md font-medium transition-colors ' +
                       (isActive
@@ -117,11 +118,42 @@ export function ReceptionQueues() {
               })}
             </div>
 
-            {pendingMoveToRoom && activeRoom && (
+            {movable.length > 0 && otherRooms.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-container-low px-4 py-2.5">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span className="text-body-md text-on-surface">
+                    {selectedIds.length > 0 ? `${selectedIds.length} selected` : 'Select all'}
+                  </span>
+                </label>
+
+                {selectedIds.length > 0 && (
+                  <Select
+                    value={pendingMoveToRoomId}
+                    onChange={(e) => setPendingMoveToRoomId(e.target.value)}
+                    className="!w-auto !py-1.5 !text-xs"
+                  >
+                    <option value="">Move selected to…</option>
+                    {otherRooms.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name} — {r.currentDoctorId ? getStaffName(r.currentDoctorId) : 'Unattended'}
+                      </option>
+                    ))}
+                  </Select>
+                )}
+              </div>
+            )}
+
+            {pendingMoveToRoom && (
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-error/10 px-4 py-3">
                 <p className="text-body-md text-on-surface">
-                  Move all <strong>{queue.length}</strong> patient(s) from <strong>{activeRoom.name}</strong> to{' '}
-                  <strong>{pendingMoveToRoom.name}</strong>? Token numbers will be reissued for {pendingMoveToRoom.name}.
+                  Move <strong>{selectedIds.length}</strong> selected patient(s) to <strong>{pendingMoveToRoom.name}</strong>?
+                  Token numbers will be reissued for {pendingMoveToRoom.name}.
                 </p>
                 <div className="flex items-center gap-2">
                   <button
@@ -133,7 +165,7 @@ export function ReceptionQueues() {
                   </button>
                   <button
                     type="button"
-                    onClick={confirmMoveEntireQueue}
+                    onClick={confirmMoveSelected}
                     className="rounded-full bg-error px-4 py-1.5 text-[13px] font-medium text-on-error hover:brightness-105"
                   >
                     Confirm move
@@ -148,13 +180,24 @@ export function ReceptionQueues() {
               {queue.map((visit: Visit) => {
                 const patient = getPatient(visit.patientId)
                 const canEscalate = visit.status !== 'completed' && visit.status !== 'in_consultation'
+                const canSelect = visit.status !== 'in_consultation'
                 return (
                   <li
                     key={visit.id}
                     className={'rounded-2xl p-3 ' + (visit.isEmergency ? 'bg-[#fee2e2]/60 ring-1 ring-[#ef4444]/40' : 'glass-soft')}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-body-md text-body-md font-medium text-on-surface">
+                      <span className="flex items-center gap-2.5 font-body-md text-body-md font-medium text-on-surface">
+                        {canSelect ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(visit.id)}
+                            onChange={() => toggleSelected(visit.id)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                        ) : (
+                          <span className="inline-block h-4 w-4" />
+                        )}
                         #{visit.tokenNumber} · {patient?.name}
                       </span>
                       <div className="flex items-center gap-1.5">
@@ -162,7 +205,7 @@ export function ReceptionQueues() {
                         <Badge tone={statusBadge[visit.status].tone}>{statusBadge[visit.status].label}</Badge>
                       </div>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 pl-[26px]">
                       {otherRooms.length > 0 && (
                         <Select
                           defaultValue=""

@@ -77,7 +77,7 @@ interface ClinicApi {
     isEmergency?: boolean
   }) => Visit
   reassignVisit: (visitId: string, newRoomId: string) => void
-  moveEntireQueue: (fromRoomId: string, toRoomId: string) => void
+  moveVisits: (visitIds: string[], toRoomId: string) => void
   setEmergency: (visitId: string, isEmergency: boolean) => void
   loginDoctor: (roomId: string, doctorId: string) => void
   logoutDoctor: (roomId: string) => void
@@ -181,15 +181,15 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
         }))
       },
 
-      // Move every non-completed visit out of one room's queue and into
-      // another's, re-issuing token numbers in the destination room's own
-      // sequence (so they don't collide with whatever's already there),
-      // while preserving the emergency-first / arrival order they had.
-      moveEntireQueue: (fromRoomId, toRoomId) => {
+      // Move a chosen set of visits (anywhere from one patient to a whole
+      // room's queue — the caller decides which) into another room,
+      // re-issuing token numbers in the destination room's own sequence
+      // (so they don't collide with whatever's already there), while
+      // preserving the emergency-first / arrival order they had.
+      moveVisits: (visitIds, toRoomId) => {
         setState((prev) => {
-          const moving = prev.visits
-            .filter((v) => v.roomId === fromRoomId && v.status !== 'completed')
-            .sort(byQueueOrder)
+          const idSet = new Set(visitIds)
+          const moving = prev.visits.filter((v) => idSet.has(v.id) && v.status !== 'completed').sort(byQueueOrder)
           if (moving.length === 0) return prev
 
           let counter = prev.tokenCounters[toRoomId] ?? 0
