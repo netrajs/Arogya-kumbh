@@ -35,6 +35,11 @@ export function DoctorConsole() {
   // not just the slice that's already cleared vitals.
   const roomQueue = queue.filter((v) => v.status !== 'in_consultation')
   const readyForDoctor = roomQueue.filter((v) => v.status === 'waiting_doctor')
+  // roomQueue is already emergency-first / token-order sorted, so the first
+  // waiting_nurse entry here is the right one to fall back to.
+  const nextWithoutVitals = roomQueue.find((v) => v.status === 'waiting_nurse') ?? null
+  const nextCandidate = readyForDoctor[0] ?? nextWithoutVitals
+  const willSkipVitals = !readyForDoctor[0] && !!nextWithoutVitals
 
   const [diagnosis, setDiagnosis] = useState('')
   const [items, setItems] = useState<Omit<PrescriptionItem, 'id'>[]>([{ medicineName: '', dosage: '' }])
@@ -98,8 +103,8 @@ export function DoctorConsole() {
   }
 
   function handleNextPatient() {
-    if (readyForDoctor.length === 0) return
-    startConsultation(readyForDoctor[0].id)
+    if (!nextCandidate) return
+    startConsultation(nextCandidate.id)
     setDiagnosis('')
     setItems([{ medicineName: '', dosage: '' }])
   }
@@ -154,11 +159,17 @@ export function DoctorConsole() {
           title={`Waiting Queue (${roomQueue.length})`}
           className="xl:col-span-4"
           action={
-            <Button size="sm" onClick={handleNextPatient} disabled={readyForDoctor.length === 0 || !!current}>
+            <Button size="sm" onClick={handleNextPatient} disabled={!nextCandidate || !!current}>
               Next patient
             </Button>
           }
         >
+          {willSkipVitals && !current && (
+            <p className="mb-3 flex items-center gap-1.5 text-meta text-error">
+              <MIcon name="warning" className="text-sm" /> No one has vitals recorded yet — next patient will skip straight to
+              consultation.
+            </p>
+          )}
           <ul className="space-y-2">
             {roomQueue.map((v) => {
               const patient = getPatient(v.patientId)
@@ -214,22 +225,29 @@ export function DoctorConsole() {
                 )
               })()}
 
-              <div className="liquid-glass mb-5 grid grid-cols-3 gap-3 rounded-2xl p-4 text-center">
-                <div>
-                  <p className="text-meta text-on-surface-variant">Weight</p>
-                  <p className="font-semibold text-on-surface">{current.vitals?.weightKg ?? '—'} kg</p>
+              {current.vitals ? (
+                <div className="liquid-glass mb-5 grid grid-cols-3 gap-3 rounded-2xl p-4 text-center">
+                  <div>
+                    <p className="text-meta text-on-surface-variant">Weight</p>
+                    <p className="font-semibold text-on-surface">{current.vitals.weightKg} kg</p>
+                  </div>
+                  <div>
+                    <p className="text-meta text-on-surface-variant">BP</p>
+                    <p className="font-semibold text-on-surface">
+                      {current.vitals.bpSystolic}/{current.vitals.bpDiastolic} mmHg
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-meta text-on-surface-variant">Sugar</p>
+                    <p className="font-semibold text-on-surface">{current.vitals.bloodSugarMgdl} mg/dL</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-meta text-on-surface-variant">BP</p>
-                  <p className="font-semibold text-on-surface">
-                    {current.vitals ? `${current.vitals.bpSystolic}/${current.vitals.bpDiastolic}` : '—'} mmHg
-                  </p>
+              ) : (
+                <div className="mb-5 flex items-center gap-2 rounded-2xl bg-[#fef3c7] px-4 py-3 text-body-md text-[#b45309]">
+                  <MIcon name="warning" className="text-lg" />
+                  Vitals not recorded — this patient was called before the nurse could take weight/BP/sugar.
                 </div>
-                <div>
-                  <p className="text-meta text-on-surface-variant">Sugar</p>
-                  <p className="font-semibold text-on-surface">{current.vitals?.bloodSugarMgdl ?? '—'} mg/dL</p>
-                </div>
-              </div>
+              )}
 
               <Label>Diagnosis</Label>
               <Textarea value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} placeholder="e.g. Viral fever" />
