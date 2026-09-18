@@ -65,6 +65,7 @@ export interface Visit {
   roomId: string
   ailmentSummary: string
   status: VisitStatus
+  isEmergency: boolean
   registeredBy: string
   registeredAt: string
   vitals?: Vitals

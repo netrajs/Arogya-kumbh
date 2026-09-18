@@ -3,6 +3,13 @@ import type { Patient, Room, Site, StaffMember, Visit, Vitals, Consultation } fr
 
 const STORAGE_KEY = 'daiko-clinic-v2'
 
+// Emergency patients always sort ahead of everyone else in a room/nurse
+// queue; within the same priority, earlier tokens go first.
+function byQueueOrder(a: Visit, b: Visit) {
+  if (a.isEmergency !== b.isEmergency) return a.isEmergency ? -1 : 1
+  return a.tokenNumber - b.tokenNumber
+}
+
 const seedSites: Site[] = [
   { id: 'site-a', name: 'Site A' },
   { id: 'site-b', name: 'Site B' },
@@ -67,8 +74,10 @@ interface ClinicApi {
     ailmentSummary: string
     roomId: string
     registeredBy: string
+    isEmergency?: boolean
   }) => Visit
   reassignVisit: (visitId: string, newRoomId: string) => void
+  setEmergency: (visitId: string, isEmergency: boolean) => void
   loginDoctor: (roomId: string, doctorId: string) => void
   logoutDoctor: (roomId: string) => void
   recordVitals: (visitId: string, vitals: Omit<Vitals, 'recordedAt'>) => void
@@ -108,7 +117,7 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
       getStaffSite,
       roomsForSite: (siteId) => state.rooms.filter((r) => r.siteId === siteId),
 
-      registerPatient: ({ name, gender, age, ailmentSummary, roomId, registeredBy }) => {
+      registerPatient: ({ name, gender, age, ailmentSummary, roomId, registeredBy, isEmergency = false }) => {
         const patientId = `pt-${crypto.randomUUID()}`
         const visitId = `vs-${crypto.randomUUID()}`
         let createdVisit: Visit | null = null
@@ -125,6 +134,7 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
             roomId,
             ailmentSummary,
             status: 'waiting_nurse',
+            isEmergency,
             registeredBy,
             registeredAt: new Date().toISOString(),
           }
@@ -144,6 +154,13 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({
           ...prev,
           visits: prev.visits.map((v) => (v.id === visitId ? { ...v, roomId: newRoomId } : v)),
+        }))
+      },
+
+      setEmergency: (visitId, isEmergency) => {
+        setState((prev) => ({
+          ...prev,
+          visits: prev.visits.map((v) => (v.id === visitId ? { ...v, isEmergency } : v)),
         }))
       },
 
@@ -202,14 +219,10 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
       getVisit: (visitId) => state.visits.find((v) => v.id === visitId),
 
       getRoomQueue: (roomId) =>
-        state.visits
-          .filter((v) => v.roomId === roomId && v.status !== 'completed')
-          .sort((a, b) => a.tokenNumber - b.tokenNumber),
+        state.visits.filter((v) => v.roomId === roomId && v.status !== 'completed').sort(byQueueOrder),
 
       getNurseQueue: (siteId) =>
-        state.visits
-          .filter((v) => v.siteId === siteId && v.status === 'waiting_nurse')
-          .sort((a, b) => a.tokenNumber - b.tokenNumber),
+        state.visits.filter((v) => v.siteId === siteId && v.status === 'waiting_nurse').sort(byQueueOrder),
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state])

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Panel } from '../../components/ui/Panel'
+import { Badge } from '../../components/ui/Badge'
 import { Input, Label, Select, Textarea } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
@@ -16,10 +17,12 @@ export function ReceptionRegister() {
   const [age, setAge] = useState('')
   const [ailment, setAilment] = useState('')
   const [roomId, setRoomId] = useState('')
-  const [confirmation, setConfirmation] = useState<{ token: number; doctor: string } | null>(null)
+  const [isEmergency, setIsEmergency] = useState(false)
+  const [confirmation, setConfirmation] = useState<{ token: number; room: string; doctor: string; isEmergency: boolean } | null>(
+    null,
+  )
 
   const myRooms = site ? roomsForSite(site.id) : []
-  const availableRooms = myRooms.filter((r) => r.currentDoctorId)
 
   const canSubmit = name.trim() && age && ailment.trim() && roomId
 
@@ -34,15 +37,19 @@ export function ReceptionRegister() {
       ailmentSummary: ailment.trim(),
       roomId,
       registeredBy: active.staffId,
+      isEmergency,
     })
     setConfirmation({
       token: visit.tokenNumber,
-      doctor: room?.currentDoctorId ? getStaffName(room.currentDoctorId) : '—',
+      room: room?.name ?? '—',
+      doctor: room?.currentDoctorId ? getStaffName(room.currentDoctorId) : 'Unattended — will be seen once a doctor logs in',
+      isEmergency,
     })
     setName('')
     setAge('')
     setAilment('')
     setRoomId('')
+    setIsEmergency(false)
   }
 
   return (
@@ -77,21 +84,35 @@ export function ReceptionRegister() {
             </div>
 
             <div className="sm:col-span-2">
-              <Label>Assign doctor</Label>
+              <Label>Assign OPD room</Label>
               <Select value={roomId} onChange={(e) => setRoomId(e.target.value)}>
-                <option value="">
-                  {availableRooms.length ? 'Select an available doctor' : 'No doctor is currently logged in'}
-                </option>
-                {availableRooms.map((r) => (
+                <option value="">{myRooms.length ? 'Select a room' : 'No OPD rooms configured for this site'}</option>
+                {myRooms.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {getStaffName(r.currentDoctorId!)} — {r.name}
+                    {r.name} — {r.currentDoctorId ? getStaffName(r.currentDoctorId) : 'Unattended (no doctor yet)'}
                   </option>
                 ))}
               </Select>
+              <p className="mt-1.5 text-meta text-on-surface-variant">
+                A room without a doctor yet is fine to pick — the patient will already be in the queue once one logs in.
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="flex items-center gap-2.5 rounded-control border border-outline-variant bg-surface-container-low px-4 py-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isEmergency}
+                  onChange={(e) => setIsEmergency(e.target.checked)}
+                  className="h-4 w-4 accent-error"
+                />
+                <span className="font-body-md text-body-md text-on-surface">Mark as emergency</span>
+                <span className="text-meta text-on-surface-variant">— moves this patient to the front of the queue</span>
+              </label>
             </div>
 
             <div className="sm:col-span-2 mt-2">
-              <Button type="submit" disabled={!canSubmit}>
+              <Button type="submit" variant={isEmergency ? 'danger' : 'primary'} disabled={!canSubmit}>
                 Generate token &amp; add to queue
               </Button>
             </div>
@@ -115,9 +136,16 @@ export function ReceptionRegister() {
 
           {confirmation && (
             <div className="liquid-glass mt-5 rounded-2xl p-4 text-center">
+              {confirmation.isEmergency && (
+                <div className="mb-2 flex justify-center">
+                  <Badge tone="emergency">Emergency</Badge>
+                </div>
+              )}
               <p className="font-label-caps text-label-caps uppercase text-primary">Token issued</p>
               <p className="mt-1 font-display-stat text-display-stat text-primary">#{confirmation.token}</p>
-              <p className="mt-1 text-meta text-on-surface-variant">Assigned to {confirmation.doctor}</p>
+              <p className="mt-1 text-meta text-on-surface-variant">
+                {confirmation.room} · {confirmation.doctor}
+              </p>
             </div>
           )}
         </Panel>

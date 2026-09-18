@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Panel } from '../../components/ui/Panel'
+import { Badge } from '../../components/ui/Badge'
 import { Input, Label } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
@@ -62,8 +63,11 @@ export function NurseVitals() {
                       (isActive ? 'bg-primary text-on-primary shadow-md' : 'glass-soft text-on-surface hover:bg-white/70')
                     }
                   >
-                    <div className="font-body-md font-medium">
-                      #{v.tokenNumber} · {patient?.name}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-body-md font-medium">
+                        #{v.tokenNumber} · {patient?.name}
+                      </div>
+                      {v.isEmergency && <Badge tone="emergency">Emergency</Badge>}
                     </div>
                     <div className={isActive ? 'text-white/80' : 'text-on-surface-variant'}>{v.ailmentSummary}</div>
                   </button>
@@ -78,11 +82,14 @@ export function NurseVitals() {
             <p className="text-body-md text-on-surface-variant">Select a patient from the list to record vitals.</p>
           ) : (
             <>
-              <div className="mb-4">
-                <h3 className="font-headline-md text-headline-md text-on-surface">
-                  {getPatient(selected.patientId)?.name} · Token #{selected.tokenNumber}
-                </h3>
-                <p className="text-body-md text-on-surface-variant">{selected.ailmentSummary}</p>
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-headline-md text-headline-md text-on-surface">
+                    {getPatient(selected.patientId)?.name} · Token #{selected.tokenNumber}
+                  </h3>
+                  <p className="text-body-md text-on-surface-variant">{selected.ailmentSummary}</p>
+                </div>
+                {selected.isEmergency && <Badge tone="emergency">Emergency</Badge>}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">

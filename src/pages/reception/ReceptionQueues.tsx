@@ -1,6 +1,7 @@
 import { PageHeader } from '../../components/ui/PageHeader'
 import { Panel } from '../../components/ui/Panel'
 import { Badge } from '../../components/ui/Badge'
+import { MIcon } from '../../components/ui/MIcon'
 import { Select } from '../../components/ui/Field'
 import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
@@ -16,7 +17,7 @@ const statusBadge: Record<VisitStatus, { tone: 'pending' | 'waiting' | 'active' 
 const glyphs = ['title-glyph title-glyph--indigo', 'title-glyph title-glyph--blue', 'title-glyph title-glyph--mint', 'title-glyph']
 
 export function ReceptionQueues() {
-  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit } = useClinic()
+  const { getPatient, getStaffName, getRoomQueue, roomsForSite, reassignVisit, setEmergency } = useClinic()
   const { site } = useActiveUser()
 
   const myRooms = site ? roomsForSite(site.id) : []
@@ -36,7 +37,7 @@ export function ReceptionQueues() {
               title={room.name}
               action={
                 <span className={'text-meta font-medium ' + (room.currentDoctorId ? 'text-primary' : 'text-on-surface-variant')}>
-                  {room.currentDoctorId ? getStaffName(room.currentDoctorId) : 'No doctor'}
+                  {room.currentDoctorId ? getStaffName(room.currentDoctorId) : 'Unattended'}
                 </span>
               }
             >
@@ -45,33 +46,51 @@ export function ReceptionQueues() {
               <ul className="space-y-2">
                 {queue.map((visit: Visit) => {
                   const patient = getPatient(visit.patientId)
-                  const otherRooms = myRooms.filter((r) => r.id !== room.id && r.currentDoctorId)
+                  const otherRooms = myRooms.filter((r) => r.id !== room.id)
+                  const canEscalate = visit.status !== 'completed' && visit.status !== 'in_consultation'
                   return (
-                    <li key={visit.id} className="glass-soft rounded-2xl p-3">
+                    <li
+                      key={visit.id}
+                      className={
+                        'rounded-2xl p-3 ' + (visit.isEmergency ? 'bg-[#fee2e2]/60 ring-1 ring-[#ef4444]/40' : 'glass-soft')
+                      }
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-body-md text-body-md font-medium text-on-surface">
                           #{visit.tokenNumber} · {patient?.name}
                         </span>
-                        <Badge tone={statusBadge[visit.status].tone}>{statusBadge[visit.status].label}</Badge>
+                        <div className="flex items-center gap-1.5">
+                          {visit.isEmergency && <Badge tone="emergency">Emergency</Badge>}
+                          <Badge tone={statusBadge[visit.status].tone}>{statusBadge[visit.status].label}</Badge>
+                        </div>
                       </div>
-                      {otherRooms.length > 0 && (
-                        <div className="mt-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        {otherRooms.length > 0 && (
                           <Select
                             defaultValue=""
                             onChange={(e) => {
                               if (e.target.value) reassignVisit(visit.id, e.target.value)
                             }}
-                            className="!py-1.5 !text-xs"
+                            className="!w-auto !py-1.5 !text-xs"
                           >
                             <option value="">Reassign to…</option>
                             {otherRooms.map((r) => (
                               <option key={r.id} value={r.id}>
-                                {getStaffName(r.currentDoctorId!)} — {r.name}
+                                {r.name} — {r.currentDoctorId ? getStaffName(r.currentDoctorId) : 'Unattended'}
                               </option>
                             ))}
                           </Select>
-                        </div>
-                      )}
+                        )}
+                        {!visit.isEmergency && canEscalate && (
+                          <button
+                            type="button"
+                            onClick={() => setEmergency(visit.id, true)}
+                            className="inline-flex items-center gap-1 rounded-full border border-error/40 px-2.5 py-1 text-[11px] font-medium text-error hover:bg-error/8"
+                          >
+                            <MIcon name="emergency" className="text-sm" /> Mark emergency
+                          </button>
+                        )}
+                      </div>
                     </li>
                   )
                 })}

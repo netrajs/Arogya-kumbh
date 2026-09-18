@@ -163,12 +163,18 @@ export function DoctorConsole() {
             {roomQueue.map((v) => {
               const patient = getPatient(v.patientId)
               return (
-                <li key={v.id} className="glass-soft rounded-2xl px-4 py-2.5">
+                <li
+                  key={v.id}
+                  className={'rounded-2xl px-4 py-2.5 ' + (v.isEmergency ? 'bg-[#fee2e2]/60 ring-1 ring-[#ef4444]/40' : 'glass-soft')}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-body-md font-medium text-on-surface">
                       #{v.tokenNumber} · {patient?.name}
                     </span>
-                    <Badge tone={queueStatus[v.status].tone}>{queueStatus[v.status].label}</Badge>
+                    <div className="flex items-center gap-1.5">
+                      {v.isEmergency && <Badge tone="emergency">Emergency</Badge>}
+                      <Badge tone={queueStatus[v.status].tone}>{queueStatus[v.status].label}</Badge>
+                    </div>
                   </div>
                   <div className="text-meta text-on-surface-variant mt-0.5">
                     {patient?.age} yrs · {patient?.gender}
@@ -200,7 +206,10 @@ export function DoctorConsole() {
                         {patient?.age} yrs · {patient?.gender} · {current.ailmentSummary}
                       </p>
                     </div>
-                    <Badge tone="active">In Consultation</Badge>
+                    <div className="flex items-center gap-1.5">
+                      {current.isEmergency && <Badge tone="emergency">Emergency</Badge>}
+                      <Badge tone="active">In Consultation</Badge>
+                    </div>
                   </div>
                 )
               })()}
