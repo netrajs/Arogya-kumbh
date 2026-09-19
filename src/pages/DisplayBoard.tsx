@@ -61,8 +61,8 @@ export function DisplayBoard() {
           fillHeight: true,
           cardPad: 'p-12 sm:p-20',
           roomName: 'text-[28px] sm:text-[40px] font-semibold',
-          tokenPad: 'px-10 py-6 sm:px-16 sm:py-10',
-          tokenText: 'text-[64px] sm:text-[110px] lg:text-[140px]',
+          tokenPad: 'px-14 py-6 sm:px-20 sm:py-9',
+          tokenText: 'text-[52px] sm:text-[80px] lg:text-[96px]',
           message: 'text-[20px] sm:text-[26px]',
           upNextRowPad: 'px-6 py-4',
           upNextToken: 'text-[28px] sm:text-[40px] font-semibold',
@@ -73,8 +73,8 @@ export function DisplayBoard() {
             fillHeight: true,
             cardPad: 'p-10 sm:p-14',
             roomName: 'text-[24px] sm:text-[32px] font-semibold',
-            tokenPad: 'px-8 py-5 sm:px-12 sm:py-7',
-            tokenText: 'text-[48px] sm:text-[80px] lg:text-[96px]',
+            tokenPad: 'px-10 py-5 sm:px-14 sm:py-6',
+            tokenText: 'text-[40px] sm:text-[60px] lg:text-[68px]',
             message: 'text-[17px] sm:text-[21px]',
             upNextRowPad: 'px-5 py-3',
             upNextToken: 'text-[22px] sm:text-[30px] font-semibold',
@@ -135,7 +135,7 @@ export function DisplayBoard() {
 
               <p className="font-label-caps text-label-caps uppercase text-primary">Now Serving</p>
               {serving ? (
-                <div className={`my-3 inline-flex max-w-full items-center justify-center rounded-3xl bg-primary/10 ${tier.tokenPad}`}>
+                <div className={`my-3 inline-flex max-w-[90%] items-center justify-center rounded-3xl bg-primary/10 ${tier.tokenPad}`}>
                   <p
                     className={`whitespace-nowrap font-display-stat ${tier.tokenText} font-bold leading-none tracking-wide text-primary tabular-nums`}
                   >
