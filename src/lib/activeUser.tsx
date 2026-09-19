@@ -1,48 +1,35 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { StaffRole } from './types'
+import { useAuth } from './AuthContext'
 import { useClinic } from './store'
+import type { StaffRole } from './types'
 
-const KEY = 'arogya-kumbh-active-user-v1'
-
-interface ActiveUser {
+export interface ActiveUser {
   role: StaffRole
   staffId: string
 }
 
-interface ActiveUserApi {
-  active: ActiveUser
-  setActive: (u: ActiveUser) => void
-}
-
-const Ctx = createContext<ActiveUserApi | null>(null)
-
-function load(): ActiveUser {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {
-    // ignore
-  }
-  return { role: 'receptionist', staffId: 'st-1' }
-}
-
-export function ActiveUserProvider({ children }: { children: ReactNode }) {
-  const [active, setActiveState] = useState<ActiveUser>(load)
-
-  useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(active))
-  }, [active])
-
-  const setActive = (u: ActiveUser) => setActiveState(u)
-
-  return <Ctx.Provider value={{ active, setActive }}>{children}</Ctx.Provider>
-}
-
+/**
+ * Bridges the real authenticated session (role from user_application_access,
+ * via /auth/me) to Clinic's own local demo data model (StaffMember, Site),
+ * which still lives in localStorage - see the SSO design spec's "Bridging
+ * to Clinic's existing local data" section. The match is by email: Clinic's
+ * seed StaffMember records carry the same addresses as the backend's dev
+ * user seed, so a login resolves to an existing staff profile end to end.
+ *
+ * `active.role` always comes from the verified session, never from the
+ * matched StaffMember - role/access control is the SSO session's call, the
+ * StaffMember match is only used for site/display-name purposes.
+ */
 export function useActiveUser() {
-  const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useActiveUser must be used within ActiveUserProvider')
+  const { user } = useAuth()
   const { staff, getStaffSite } = useClinic()
-  const staffMember = staff.find((s) => s.id === ctx.active.staffId)
-  const site = getStaffSite(ctx.active.staffId)
-  return { ...ctx, staffMember, site }
+
+  const staffMember = user ? staff.find((s) => s.email.toLowerCase() === user.email.toLowerCase()) : undefined
+  const site = staffMember ? getStaffSite(staffMember.id) : undefined
+
+  const active: ActiveUser = {
+    role: (user?.role ?? 'receptionist') as StaffRole,
+    staffId: staffMember?.id ?? '',
+  }
+
+  return { active, staffMember, site }
 }

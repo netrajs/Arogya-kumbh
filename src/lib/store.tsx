@@ -12,7 +12,11 @@ import type {
   OnboardingDocument,
 } from './types'
 
-const STORAGE_KEY = 'daiko-clinic-v2'
+// Namespaced by the fixed tenant slug this deployment serves (SSO_TENANCY.md
+// §4 Pattern A: single tenant per deployment) - see the SSO design spec's
+// "Bridging to Clinic's existing local data" section for why this stays a
+// compile-time constant rather than a value read from the session.
+const STORAGE_KEY = 'daiko-clinic-v2-kumbh'
 
 // Emergency patients always sort ahead of everyone else in a room/nurse
 // queue; within the same priority, earlier registrations go first.
