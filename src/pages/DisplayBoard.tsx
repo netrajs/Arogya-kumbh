@@ -50,8 +50,49 @@ export function DisplayBoard() {
   // state instead of a misleading "no patient in consultation".
   const visibleRooms = rooms.filter((room) => room.currentDoctorId || getRoomQueue(room.id).length > 0)
 
+  // Fewer rooms on screen means each one should read from further away — a
+  // single open room should dominate the whole screen, two should split it
+  // evenly, and from three up it falls back to a normal grid.
+  const roomCount = visibleRooms.length
+  const tier =
+    roomCount === 1
+      ? {
+          grid: 'grid-cols-1',
+          fillHeight: true,
+          cardPad: 'p-12 sm:p-20',
+          roomName: 'text-[28px] sm:text-[40px] font-semibold',
+          tokenPad: 'px-10 py-6 sm:px-16 sm:py-10',
+          tokenText: 'text-[64px] sm:text-[110px] lg:text-[140px]',
+          message: 'text-[20px] sm:text-[26px]',
+          upNextRowPad: 'px-6 py-4',
+          upNextToken: 'text-[28px] sm:text-[40px] font-semibold',
+        }
+      : roomCount === 2
+        ? {
+            grid: 'grid-cols-1 sm:grid-cols-2',
+            fillHeight: true,
+            cardPad: 'p-10 sm:p-14',
+            roomName: 'text-[24px] sm:text-[32px] font-semibold',
+            tokenPad: 'px-8 py-5 sm:px-12 sm:py-7',
+            tokenText: 'text-[48px] sm:text-[80px] lg:text-[96px]',
+            message: 'text-[17px] sm:text-[21px]',
+            upNextRowPad: 'px-5 py-3',
+            upNextToken: 'text-[22px] sm:text-[30px] font-semibold',
+          }
+        : {
+            grid: 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3',
+            fillHeight: false,
+            cardPad: 'p-8 sm:p-10',
+            roomName: 'font-headline-md text-headline-md',
+            tokenPad: 'px-6 py-3 sm:px-8 sm:py-4',
+            tokenText: 'text-[40px] sm:text-[52px]',
+            message: 'text-body-lg',
+            upNextRowPad: 'px-4 py-2.5',
+            upNextToken: 'font-headline-md text-headline-md font-semibold',
+          }
+
   return (
-    <div className="app-canvas min-h-screen p-10 font-body-md">
+    <div className="app-canvas flex min-h-screen flex-col p-10 font-body-md">
       <header className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <DaikoLogo className="h-12 w-12" />
@@ -70,15 +111,21 @@ export function DisplayBoard() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
+      <div className={`grid gap-8 ${tier.grid} ${tier.fillHeight ? 'flex-1' : ''}`}>
         {visibleRooms.map((room) => {
           const queue = getRoomQueue(room.id)
           const serving = queue.find((v) => v.status === 'in_consultation')
           const upNext = queue.filter((v) => v.status !== 'in_consultation').slice(0, 6)
 
           return (
-            <div key={room.id} className="card-surface flex flex-col items-center p-8 text-center sm:p-10">
-              <p className="font-headline-md text-headline-md text-on-surface">{room.name}</p>
+            <div
+              key={room.id}
+              className={
+                `card-surface flex flex-col items-center text-center ${tier.cardPad} ` +
+                (tier.fillHeight ? 'h-full justify-center' : '')
+              }
+            >
+              <p className={`${tier.roomName} text-on-surface`}>{room.name}</p>
               <div className="mb-6 mt-2">
                 <Badge tone={room.currentDoctorId ? 'active' : 'done'}>
                   <MIcon name="stethoscope" className="text-[13px]" />
@@ -88,15 +135,17 @@ export function DisplayBoard() {
 
               <p className="font-label-caps text-label-caps uppercase text-primary">Now Serving</p>
               {serving ? (
-                <div className="my-3 inline-flex max-w-full items-center justify-center rounded-3xl bg-primary/10 px-6 py-3 sm:px-8 sm:py-4">
-                  <p className="whitespace-nowrap font-display-stat text-[40px] font-bold leading-none tracking-wide text-primary tabular-nums sm:text-[52px]">
+                <div className={`my-3 inline-flex max-w-full items-center justify-center rounded-3xl bg-primary/10 ${tier.tokenPad}`}>
+                  <p
+                    className={`whitespace-nowrap font-display-stat ${tier.tokenText} font-bold leading-none tracking-wide text-primary tabular-nums`}
+                  >
                     {serving.tokenNumber}
                   </p>
                 </div>
               ) : room.currentDoctorId ? (
-                <p className="my-6 text-body-lg text-on-surface-variant">No patient in consultation</p>
+                <p className={`my-6 ${tier.message} text-on-surface-variant`}>No patient in consultation</p>
               ) : (
-                <p className="my-6 text-body-lg text-on-surface-variant">
+                <p className={`my-6 ${tier.message} text-on-surface-variant`}>
                   Room not open yet — {queue.length} waiting for a doctor
                 </p>
               )}
@@ -113,7 +162,7 @@ export function DisplayBoard() {
                       <li
                         key={v.id}
                         className={
-                          'flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 ' +
+                          `flex items-center justify-between gap-3 rounded-xl ${tier.upNextRowPad} ` +
                           (v.isEmergency ? 'bg-[#fee2e2]' : 'bg-surface-container-low')
                         }
                       >
@@ -127,7 +176,7 @@ export function DisplayBoard() {
                         </span>
                         <span
                           className={
-                            'whitespace-nowrap font-headline-md text-headline-md font-semibold tabular-nums ' +
+                            `whitespace-nowrap tabular-nums ${tier.upNextToken} ` +
                             (v.isEmergency ? 'text-[#dc2626]' : 'text-on-surface')
                           }
                         >
