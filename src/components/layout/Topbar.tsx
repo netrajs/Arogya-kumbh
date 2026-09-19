@@ -9,12 +9,14 @@ const roleLabels: Record<StaffRole, string> = {
   receptionist: 'Receptionist',
   nurse: 'Nurse',
   doctor: 'Doctor',
+  hr: 'HR',
 }
 
 const primaryAction: Record<StaffRole, { label: string; to: string; icon: string }> = {
   receptionist: { label: 'Register patient', to: '/reception/register', icon: 'person_add' },
   nurse: { label: 'Vitals queue', to: '/nurse', icon: 'monitor_heart' },
   doctor: { label: 'My room', to: '/doctor', icon: 'meeting_room' },
+  hr: { label: 'HR Dashboard', to: '/hr', icon: 'badge' },
 }
 
 function getInitials(name: string) {

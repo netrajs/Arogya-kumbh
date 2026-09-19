@@ -18,12 +18,14 @@ const navByRole: Record<StaffRole, NavItem[]> = {
     { to: '/doctor', label: 'My Room', icon: 'meeting_room' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
   ],
+  hr: [{ to: '/hr', label: 'Dashboard', icon: 'dashboard' }],
 }
 
 const portalLabel: Record<StaffRole, string> = {
   receptionist: 'Reception',
   nurse: 'Nurse',
   doctor: 'Doctor',
+  hr: 'HR',
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
