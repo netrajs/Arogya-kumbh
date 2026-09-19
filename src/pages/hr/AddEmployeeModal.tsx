@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Input, Label, Select } from '../../components/ui/Field'
 import { Button } from '../../components/ui/Button'
 import { MIcon } from '../../components/ui/MIcon'
@@ -10,23 +11,26 @@ type OnboardableRole = 'doctor' | 'nurse' | 'receptionist'
 
 const roleMeta: Record<
   OnboardableRole,
-  { label: string; icon: string; departmentLabel: string; departmentPlaceholder: string }
+  { label: string; icon: string; glyphClass: string; departmentLabel: string; departmentPlaceholder: string }
 > = {
   doctor: {
     label: 'Doctor',
     icon: 'stethoscope',
+    glyphClass: 'title-glyph--indigo',
     departmentLabel: 'Department / Specialty',
     departmentPlaceholder: 'e.g. Cardiology',
   },
   nurse: {
     label: 'Nurse',
     icon: 'monitor_heart',
+    glyphClass: 'title-glyph--blue',
     departmentLabel: 'Department / Specialty',
     departmentPlaceholder: 'e.g. General Ward',
   },
   receptionist: {
     label: 'Receptionist',
     icon: 'person_add',
+    glyphClass: 'title-glyph--mint',
     departmentLabel: 'Department / Role',
     departmentPlaceholder: 'e.g. Front Desk',
   },
@@ -90,16 +94,16 @@ export function AddEmployeeModal({ onClose }: { onClose: () => void }) {
     onClose()
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4 py-8"
       onClick={onClose}
     >
       <div
-        className="glass w-full max-w-xl max-h-full overflow-y-auto rounded-2xl shadow-modal animate-fade-up"
+        className="card-surface w-full max-w-xl max-h-full overflow-y-auto animate-fade-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/60 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-outline-variant/60 px-6 py-4">
           <h2 className="font-headline-md text-headline-md text-on-surface">
             {role ? `Onboard ${roleMeta[role].label}` : 'Add Employee'}
           </h2>
@@ -119,10 +123,14 @@ export function AddEmployeeModal({ onClose }: { onClose: () => void }) {
                 key={r}
                 type="button"
                 onClick={() => pickRole(r)}
-                className="glass-soft flex flex-col items-center gap-2 rounded-2xl p-5 transition-colors hover:bg-primary/5 hover:text-primary"
+                className="lift group flex flex-col items-center gap-3 rounded-2xl border border-outline-variant bg-surface-container-low p-5 transition-colors hover:border-primary/40"
               >
-                <MIcon name={roleMeta[r].icon} className="text-2xl" />
-                <span className="font-body-md font-medium">{roleMeta[r].label}</span>
+                <span className={`title-glyph ${roleMeta[r].glyphClass}`}>
+                  <MIcon name={roleMeta[r].icon} className="text-xl" />
+                </span>
+                <span className="font-body-md font-semibold text-on-surface group-hover:text-primary">
+                  {roleMeta[r].label}
+                </span>
               </button>
             ))}
           </div>
@@ -230,6 +238,7 @@ export function AddEmployeeModal({ onClose }: { onClose: () => void }) {
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
