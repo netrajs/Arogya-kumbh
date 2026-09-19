@@ -1,4 +1,13 @@
-export type StaffRole = 'receptionist' | 'nurse' | 'doctor'
+export type StaffRole = 'receptionist' | 'nurse' | 'doctor' | 'hr'
+
+export type EmploymentType = 'full_time' | 'part_time' | 'contract' | 'intern'
+
+export type StaffStatus = 'pending' | 'active'
+
+export interface OnboardingDocument {
+  name: string
+  received: boolean
+}
 
 export interface Site {
   id: string
@@ -10,6 +19,15 @@ export interface StaffMember {
   name: string
   role: StaffRole
   siteId: string
+  email: string
+  phone: string
+  dateOfJoining: string
+  department: string
+  employmentType: EmploymentType
+  compensation: number
+  status: StaffStatus
+  documents: OnboardingDocument[]
+  createdAt: string
 }
 
 export interface Room {

@@ -1,5 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { Patient, Room, Site, StaffMember, Visit, Vitals, Consultation } from './types'
+import type {
+  Patient,
+  Room,
+  Site,
+  StaffMember,
+  Visit,
+  Vitals,
+  Consultation,
+  EmploymentType,
+  StaffStatus,
+  OnboardingDocument,
+} from './types'
 
 const STORAGE_KEY = 'daiko-clinic-v2'
 
@@ -43,13 +54,60 @@ const seedSites: Site[] = [
 ]
 
 const seedStaff: StaffMember[] = [
-  { id: 'st-1', name: 'Sara Khan', role: 'receptionist', siteId: 'site-a' },
-  { id: 'st-2', name: 'Priya Shah', role: 'nurse', siteId: 'site-a' },
-  { id: 'st-3', name: 'Dr. Arjun Mehta', role: 'doctor', siteId: 'site-a' },
-  { id: 'st-4', name: 'Dr. Kavita Rao', role: 'doctor', siteId: 'site-a' },
-  { id: 'st-6', name: 'Neha Verma', role: 'receptionist', siteId: 'site-b' },
-  { id: 'st-7', name: 'Rina Kapoor', role: 'nurse', siteId: 'site-b' },
-  { id: 'st-5', name: 'Dr. Imran Sheikh', role: 'doctor', siteId: 'site-b' },
+  {
+    id: 'st-1', name: 'Sara Khan', role: 'receptionist', siteId: 'site-a',
+    email: 'sara.khan@daikoclinic.example', phone: '9800000001', dateOfJoining: '2024-01-15',
+    department: 'Front Desk', employmentType: 'full_time', compensation: 25000,
+    status: 'active', documents: [], createdAt: '2024-01-15T09:00:00.000Z',
+  },
+  {
+    id: 'st-2', name: 'Priya Shah', role: 'nurse', siteId: 'site-a',
+    email: 'priya.shah@daikoclinic.example', phone: '9800000002', dateOfJoining: '2023-11-01',
+    department: 'General Ward', employmentType: 'full_time', compensation: 32000,
+    status: 'active', documents: [], createdAt: '2023-11-01T09:00:00.000Z',
+  },
+  {
+    id: 'st-3', name: 'Dr. Arjun Mehta', role: 'doctor', siteId: 'site-a',
+    email: 'arjun.mehta@daikoclinic.example', phone: '9800000003', dateOfJoining: '2022-06-10',
+    department: 'General Medicine', employmentType: 'full_time', compensation: 120000,
+    status: 'active', documents: [], createdAt: '2022-06-10T09:00:00.000Z',
+  },
+  {
+    id: 'st-4', name: 'Dr. Kavita Rao', role: 'doctor', siteId: 'site-a',
+    email: 'kavita.rao@daikoclinic.example', phone: '9800000004', dateOfJoining: '2023-02-20',
+    department: 'Pediatrics', employmentType: 'full_time', compensation: 115000,
+    status: 'active', documents: [], createdAt: '2023-02-20T09:00:00.000Z',
+  },
+  {
+    id: 'st-6', name: 'Neha Verma', role: 'receptionist', siteId: 'site-b',
+    email: 'neha.verma@daikoclinic.example', phone: '9800000006', dateOfJoining: '2023-09-05',
+    department: 'Front Desk', employmentType: 'full_time', compensation: 24000,
+    status: 'active', documents: [], createdAt: '2023-09-05T09:00:00.000Z',
+  },
+  {
+    id: 'st-7', name: 'Rina Kapoor', role: 'nurse', siteId: 'site-b',
+    email: 'rina.kapoor@daikoclinic.example', phone: '9800000007', dateOfJoining: '2023-10-12',
+    department: 'General Ward', employmentType: 'full_time', compensation: 31000,
+    status: 'active', documents: [], createdAt: '2023-10-12T09:00:00.000Z',
+  },
+  {
+    id: 'st-5', name: 'Dr. Imran Sheikh', role: 'doctor', siteId: 'site-b',
+    email: 'imran.sheikh@daikoclinic.example', phone: '9800000005', dateOfJoining: '2022-08-18',
+    department: 'General Medicine', employmentType: 'full_time', compensation: 118000,
+    status: 'active', documents: [], createdAt: '2022-08-18T09:00:00.000Z',
+  },
+  {
+    id: 'st-8', name: 'Ananya Gupta', role: 'hr', siteId: 'site-a',
+    email: 'ananya.gupta@daikoclinic.example', phone: '9800000008', dateOfJoining: '2023-06-01',
+    department: 'Human Resources', employmentType: 'full_time', compensation: 45000,
+    status: 'active', documents: [], createdAt: '2023-06-01T09:00:00.000Z',
+  },
+  {
+    id: 'st-9', name: 'Vikram Nair', role: 'hr', siteId: 'site-b',
+    email: 'vikram.nair@daikoclinic.example', phone: '9800000009', dateOfJoining: '2023-07-01',
+    department: 'Human Resources', employmentType: 'full_time', compensation: 45000,
+    status: 'active', documents: [], createdAt: '2023-07-01T09:00:00.000Z',
+  },
 ]
 
 const seedRooms: Room[] = [
@@ -70,14 +128,36 @@ interface ClinicState {
   dailyTokenCounters: Record<string, number>
 }
 
+// Shape of whatever might already be sitting in a user's localStorage —
+// staff records from before the onboarding fields existed only guarantee
+// id/name/role/siteId, everything else may be missing.
+interface RawClinicState extends Omit<ClinicState, 'staff'> {
+  staff: (Pick<StaffMember, 'id' | 'name' | 'role' | 'siteId'> & Partial<StaffMember>)[]
+}
+
 function loadState(): ClinicState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as ClinicState
-      // Older data (per-room `tokenCounters`) predates the site-wide daily
-      // counter — patch it in so existing localStorage doesn't crash.
-      return { ...parsed, dailyTokenCounters: parsed.dailyTokenCounters ?? {} }
+      const parsed = JSON.parse(raw) as RawClinicState
+      // Older data predates dailyTokenCounters and the staff onboarding
+      // fields below — patch both in so existing localStorage doesn't crash.
+      return {
+        ...parsed,
+        dailyTokenCounters: parsed.dailyTokenCounters ?? {},
+        staff: parsed.staff.map((s) => ({
+          email: '',
+          phone: '',
+          dateOfJoining: '',
+          department: '',
+          employmentType: 'full_time' as EmploymentType,
+          compensation: 0,
+          status: 'active' as StaffStatus,
+          documents: [] as OnboardingDocument[],
+          createdAt: '2024-01-01T00:00:00.000Z',
+          ...s,
+        })),
+      }
     }
   } catch {
     // ignore corrupt storage
@@ -101,6 +181,19 @@ interface ClinicApi {
   getStaffName: (staffId: string) => string
   getStaffSite: (staffId: string) => Site | undefined
   roomsForSite: (siteId: string) => Room[]
+  addStaffMember: (input: {
+    name: string
+    role: 'doctor' | 'nurse' | 'receptionist'
+    siteId: string
+    email: string
+    phone: string
+    dateOfJoining: string
+    department: string
+    employmentType: EmploymentType
+    compensation: number
+    documents: OnboardingDocument[]
+  }) => StaffMember
+  setStaffStatus: (staffId: string, status: StaffStatus) => void
   registerPatient: (input: {
     name: string
     gender: Patient['gender']
@@ -167,6 +260,33 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
       getStaffName,
       getStaffSite,
       roomsForSite: (siteId) => state.rooms.filter((r) => r.siteId === siteId),
+
+      addStaffMember: (input) => {
+        const member: StaffMember = {
+          id: `st-${crypto.randomUUID()}`,
+          name: input.name,
+          role: input.role,
+          siteId: input.siteId,
+          email: input.email,
+          phone: input.phone,
+          dateOfJoining: input.dateOfJoining,
+          department: input.department,
+          employmentType: input.employmentType,
+          compensation: input.compensation,
+          status: 'pending',
+          documents: input.documents,
+          createdAt: new Date().toISOString(),
+        }
+        setState((prev) => ({ ...prev, staff: [...prev.staff, member] }))
+        return member
+      },
+
+      setStaffStatus: (staffId, status) => {
+        setState((prev) => ({
+          ...prev,
+          staff: prev.staff.map((s) => (s.id === staffId ? { ...s, status } : s)),
+        }))
+      },
 
       registerPatient: ({ name, gender, age, ailmentSummary, roomId, registeredBy, isEmergency = false }) => {
         const patientId = `pt-${crypto.randomUUID()}`
