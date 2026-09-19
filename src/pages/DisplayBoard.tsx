@@ -108,19 +108,34 @@ export function DisplayBoard() {
                 {upNext.length === 0 ? (
                   <p className="text-body-md text-on-surface-variant">Queue clear</p>
                 ) : (
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    {upNext.map((v) => (
-                      <span
+                  <ul className="flex w-full flex-col gap-2">
+                    {upNext.map((v, idx) => (
+                      <li
                         key={v.id}
                         className={
-                          'flex h-12 min-w-[3rem] items-center justify-center whitespace-nowrap rounded-2xl px-4 font-headline-md text-headline-md font-semibold tabular-nums ' +
-                          (v.isEmergency ? 'bg-[#fee2e2] text-[#dc2626]' : 'bg-surface-container-low text-on-surface')
+                          'flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 ' +
+                          (v.isEmergency ? 'bg-[#fee2e2]' : 'bg-surface-container-low')
                         }
                       >
-                        {v.tokenNumber}
-                      </span>
+                        <span
+                          className={
+                            'font-label-caps text-label-caps uppercase ' +
+                            (v.isEmergency ? 'text-[#dc2626]' : 'text-on-surface-variant')
+                          }
+                        >
+                          {idx === 0 ? 'Next' : `#${idx + 1}`}
+                        </span>
+                        <span
+                          className={
+                            'whitespace-nowrap font-headline-md text-headline-md font-semibold tabular-nums ' +
+                            (v.isEmergency ? 'text-[#dc2626]' : 'text-on-surface')
+                          }
+                        >
+                          {v.tokenNumber}
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
             </div>
