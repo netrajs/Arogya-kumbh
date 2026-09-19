@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useClinic } from '../lib/store'
 import { DaikoLogo } from '../components/ui/DaikoLogo'
+import { Badge } from '../components/ui/Badge'
+import { MIcon } from '../components/ui/MIcon'
 
 function useClock() {
   const [now, setNow] = useState(() => new Date())
@@ -69,23 +71,30 @@ export function DisplayBoard() {
           const upNext = queue.filter((v) => v.status !== 'in_consultation').slice(0, 6)
 
           return (
-            <div key={room.id} className="card-surface flex flex-col items-center p-10 text-center">
+            <div key={room.id} className="card-surface flex flex-col items-center p-8 text-center sm:p-10">
               <p className="font-headline-md text-headline-md text-on-surface">{room.name}</p>
-              <p className="mb-6 text-body-md text-on-surface-variant">
-                {room.currentDoctorId ? getStaffName(room.currentDoctorId) : 'Unattended'}
-              </p>
+              <div className="mb-6 mt-2">
+                <Badge tone={room.currentDoctorId ? 'active' : 'done'}>
+                  <MIcon name="stethoscope" className="text-[13px]" />
+                  {room.currentDoctorId ? getStaffName(room.currentDoctorId) : 'Unattended'}
+                </Badge>
+              </div>
 
               <p className="font-label-caps text-label-caps uppercase text-primary">Now Serving</p>
               {serving ? (
-                <p className="my-2 font-display-stat text-[96px] font-bold leading-none text-primary">
-                  {serving.tokenNumber}
-                </p>
+                <div className="my-3 inline-flex max-w-full items-center justify-center rounded-3xl bg-primary/10 px-6 py-3 sm:px-8 sm:py-4">
+                  <p className="whitespace-nowrap font-display-stat text-[40px] font-bold leading-none tracking-wide text-primary tabular-nums sm:text-[52px]">
+                    {serving.tokenNumber}
+                  </p>
+                </div>
               ) : (
                 <p className="my-6 text-body-lg text-on-surface-variant">No patient in consultation</p>
               )}
 
               <div className="mt-6 w-full border-t border-outline-variant/60 pt-6">
-                <p className="mb-3 font-label-caps text-label-caps uppercase text-on-surface-variant">Up Next</p>
+                <p className="mb-3 font-label-caps text-label-caps uppercase text-on-surface-variant">
+                  Up Next {upNext.length > 0 && `(${upNext.length})`}
+                </p>
                 {upNext.length === 0 ? (
                   <p className="text-body-md text-on-surface-variant">Queue clear</p>
                 ) : (
@@ -94,7 +103,7 @@ export function DisplayBoard() {
                       <span
                         key={v.id}
                         className={
-                          'flex h-12 min-w-12 items-center justify-center rounded-full px-3 font-headline-md text-headline-md font-semibold ' +
+                          'flex h-12 min-w-[3rem] items-center justify-center whitespace-nowrap rounded-2xl px-4 font-headline-md text-headline-md font-semibold tabular-nums ' +
                           (v.isEmergency ? 'bg-[#fee2e2] text-[#dc2626]' : 'bg-surface-container-low text-on-surface')
                         }
                       >
