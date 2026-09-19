@@ -18,7 +18,7 @@ export function ReceptionRegister() {
   const [ailment, setAilment] = useState('')
   const [roomId, setRoomId] = useState('')
   const [isEmergency, setIsEmergency] = useState(false)
-  const [confirmation, setConfirmation] = useState<{ token: number; room: string; doctor: string; isEmergency: boolean } | null>(
+  const [confirmation, setConfirmation] = useState<{ token: string; room: string; doctor: string; isEmergency: boolean } | null>(
     null,
   )
 

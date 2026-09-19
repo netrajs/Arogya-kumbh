@@ -5,10 +5,12 @@ import { Panel } from '../../components/ui/Panel'
 import { Badge } from '../../components/ui/Badge'
 import { MIcon } from '../../components/ui/MIcon'
 import { Input, Label, Select, Textarea } from '../../components/ui/Field'
+import { Autocomplete } from '../../components/ui/Autocomplete'
 import { Button } from '../../components/ui/Button'
 import { useClinic } from '../../lib/store'
 import { useActiveUser } from '../../lib/activeUser'
 import type { PrescriptionItem, VisitStatus } from '../../lib/types'
+import { MEDICINES } from '../../data/medicines'
 
 const queueStatus: Record<VisitStatus, { tone: 'pending' | 'waiting' | 'active' | 'done'; label: string }> = {
   waiting_nurse: { tone: 'pending', label: 'With Nurse' },
@@ -257,16 +259,19 @@ export function DoctorConsole() {
                 <div className="space-y-2">
                   {items.map((item, idx) => (
                     <div key={idx} className="flex gap-2">
-                      <Input
+                      <Autocomplete
+                        className="flex-1"
                         placeholder="Medicine name"
                         value={item.medicineName}
-                        onChange={(e) => {
+                        options={MEDICINES}
+                        onChange={(value) => {
                           const next = [...items]
-                          next[idx] = { ...next[idx], medicineName: e.target.value }
+                          next[idx] = { ...next[idx], medicineName: value }
                           setItems(next)
                         }}
                       />
                       <Input
+                        className="flex-1"
                         placeholder="Dosage e.g. 1-0-1"
                         value={item.dosage}
                         onChange={(e) => {

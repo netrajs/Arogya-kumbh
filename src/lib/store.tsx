@@ -4,10 +4,37 @@ import type { Patient, Room, Site, StaffMember, Visit, Vitals, Consultation } fr
 const STORAGE_KEY = 'daiko-clinic-v2'
 
 // Emergency patients always sort ahead of everyone else in a room/nurse
-// queue; within the same priority, earlier tokens go first.
+// queue; within the same priority, earlier registrations go first.
 function byQueueOrder(a: Visit, b: Visit) {
   if (a.isEmergency !== b.isEmergency) return a.isEmergency ? -1 : 1
-  return a.tokenNumber - b.tokenNumber
+  return a.registeredAt.localeCompare(b.registeredAt)
+}
+
+// Token format: <month letter><time-slot letter>-<day of month>-<daily patient no>
+// e.g. "ab-19-03" = January, 6am-12pm, the 19th, 3rd patient registered that day.
+const MONTH_LETTERS = 'abcdefghijkl' // a=Jan ... l=Dec
+
+function dateKey(date: Date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function timeSlotLetter(date: Date) {
+  const hour = date.getHours()
+  if (hour < 6) return 'a'
+  if (hour < 12) return 'b'
+  if (hour < 18) return 'c'
+  return 'd'
+}
+
+function formatToken(date: Date, dailySeq: number) {
+  const monthLetter = MONTH_LETTERS[date.getMonth()]
+  const timeLetter = timeSlotLetter(date)
+  const day = String(date.getDate()).padStart(2, '0')
+  const patientNo = String(dailySeq).padStart(2, '0')
+  return `${monthLetter}${timeLetter}-${day}-${patientNo}`
 }
 
 const seedSites: Site[] = [
@@ -38,13 +65,20 @@ interface ClinicState {
   rooms: Room[]
   patients: Patient[]
   visits: Visit[]
-  tokenCounters: Record<string, number>
+  // Keyed by calendar day ("YYYY-MM-DD"), shared across the whole clinic
+  // so every token issued on a given day is unique.
+  dailyTokenCounters: Record<string, number>
 }
 
 function loadState(): ClinicState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw) as ClinicState
+    if (raw) {
+      const parsed = JSON.parse(raw) as ClinicState
+      // Older data (per-room `tokenCounters`) predates the site-wide daily
+      // counter — patch it in so existing localStorage doesn't crash.
+      return { ...parsed, dailyTokenCounters: parsed.dailyTokenCounters ?? {} }
+    }
   } catch {
     // ignore corrupt storage
   }
@@ -54,7 +88,7 @@ function loadState(): ClinicState {
     rooms: seedRooms,
     patients: [],
     visits: [],
-    tokenCounters: {},
+    dailyTokenCounters: {},
   }
 }
 
@@ -141,26 +175,28 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
 
         setState((prev) => {
           const room = prev.rooms.find((r) => r.id === roomId)!
-          const nextToken = (prev.tokenCounters[roomId] ?? 0) + 1
+          const now = new Date()
+          const key = dateKey(now)
+          const nextSeq = (prev.dailyTokenCounters[key] ?? 0) + 1
           const patient: Patient = { id: patientId, siteId: room.siteId, name, gender, age }
           const visit: Visit = {
             id: visitId,
             siteId: room.siteId,
-            tokenNumber: nextToken,
+            tokenNumber: formatToken(now, nextSeq),
             patientId,
             roomId,
             ailmentSummary,
             status: 'waiting_nurse',
             isEmergency,
             registeredBy,
-            registeredAt: new Date().toISOString(),
+            registeredAt: now.toISOString(),
           }
           createdVisit = visit
           return {
             ...prev,
             patients: [...prev.patients, patient],
             visits: [...prev.visits, visit],
-            tokenCounters: { ...prev.tokenCounters, [roomId]: nextToken },
+            dailyTokenCounters: { ...prev.dailyTokenCounters, [key]: nextSeq },
           }
         })
 
@@ -182,25 +218,16 @@ export function ClinicProvider({ children }: { children: ReactNode }) {
       },
 
       // Move a chosen set of visits (anywhere from one patient to a whole
-      // room's queue — the caller decides which) into another room,
-      // re-issuing token numbers in the destination room's own sequence
-      // (so they don't collide with whatever's already there), while
-      // preserving the emergency-first / arrival order they had.
+      // room's queue — the caller decides which) into another room. The
+      // patient keeps the token they were issued at registration.
       moveVisits: (visitIds, toRoomId) => {
         setState((prev) => {
           const idSet = new Set(visitIds)
-          const moving = prev.visits.filter((v) => idSet.has(v.id) && v.status !== 'completed').sort(byQueueOrder)
-          if (moving.length === 0) return prev
-
-          let counter = prev.tokenCounters[toRoomId] ?? 0
-          const newTokenById = new Map(moving.map((v) => [v.id, ++counter]))
-
           return {
             ...prev,
             visits: prev.visits.map((v) =>
-              newTokenById.has(v.id) ? { ...v, roomId: toRoomId, tokenNumber: newTokenById.get(v.id)! } : v,
+              idSet.has(v.id) && v.status !== 'completed' ? { ...v, roomId: toRoomId } : v,
             ),
-            tokenCounters: { ...prev.tokenCounters, [toRoomId]: counter },
           }
         })
       },

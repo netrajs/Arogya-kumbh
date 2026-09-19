@@ -60,7 +60,7 @@ export interface Consultation {
 export interface Visit {
   id: string
   siteId: string
-  tokenNumber: number
+  tokenNumber: string
   patientId: string
   roomId: string
   ailmentSummary: string
