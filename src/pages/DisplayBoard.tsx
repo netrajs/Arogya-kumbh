@@ -43,6 +43,12 @@ export function DisplayBoard() {
   }
 
   const rooms = roomsForSite(site.id)
+  // An unattended room with nobody queued has nothing to tell a patient —
+  // drop it from the board entirely. An unattended room that already has
+  // patients waiting (reception can register into it before a doctor logs
+  // in) still matters to them, so it stays, with an honest "not open yet"
+  // state instead of a misleading "no patient in consultation".
+  const visibleRooms = rooms.filter((room) => room.currentDoctorId || getRoomQueue(room.id).length > 0)
 
   return (
     <div className="app-canvas min-h-screen p-10 font-body-md">
@@ -65,7 +71,7 @@ export function DisplayBoard() {
       </header>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
-        {rooms.map((room) => {
+        {visibleRooms.map((room) => {
           const queue = getRoomQueue(room.id)
           const serving = queue.find((v) => v.status === 'in_consultation')
           const upNext = queue.filter((v) => v.status !== 'in_consultation').slice(0, 6)
@@ -87,8 +93,12 @@ export function DisplayBoard() {
                     {serving.tokenNumber}
                   </p>
                 </div>
-              ) : (
+              ) : room.currentDoctorId ? (
                 <p className="my-6 text-body-lg text-on-surface-variant">No patient in consultation</p>
+              ) : (
+                <p className="my-6 text-body-lg text-on-surface-variant">
+                  Room not open yet — {queue.length} waiting for a doctor
+                </p>
               )}
 
               <div className="mt-6 w-full border-t border-outline-variant/60 pt-6">
@@ -117,8 +127,10 @@ export function DisplayBoard() {
           )
         })}
 
-        {rooms.length === 0 && (
-          <p className="text-body-lg text-on-surface-variant">No OPD rooms configured for this site.</p>
+        {visibleRooms.length === 0 && (
+          <p className="text-body-lg text-on-surface-variant">
+            {rooms.length === 0 ? 'No OPD rooms configured for this site.' : 'No rooms currently open.'}
+          </p>
         )}
       </div>
     </div>
